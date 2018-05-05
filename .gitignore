@@ -1,0 +1,12 @@
+*~
+venv/
+__pycache__/
+Quart_CORS.egg-info/
+.cache/
+.tox/
+TODO
+.mypy_cache/
+.hypothesis/
+docs/_build/
+.coverage
+.pytest_cache/

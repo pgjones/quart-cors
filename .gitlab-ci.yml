@@ -1,0 +1,6 @@
+image: python:3.6.4-stretch
+
+tox:
+  script:
+  - pip install tox
+  - tox
