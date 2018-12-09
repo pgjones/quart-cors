@@ -4,14 +4,14 @@ from quart import Quart
 from quart_cors import route_cors
 
 
-@pytest.fixture(name='app', scope='function')
+@pytest.fixture(name="app", scope="function")
 def _app() -> Quart:
     app = Quart(__name__)
 
-    @app.route('/')
+    @app.route("/")
     @route_cors()
     async def index() -> str:
-        return 'Hello'
+        return "Hello"
 
     return app
 
@@ -19,55 +19,56 @@ def _app() -> Quart:
 # These tests are based on https://www.w3.org/TR/cors section 6.2, and
 # follow the logic given.
 
+
 @pytest.mark.asyncio
 async def test_no_origin(app: Quart) -> None:
     test_client = app.test_client()
-    response = await test_client.options('/')
-    assert 'Access-Control-Allow-Origin' not in response.headers
+    response = await test_client.options("/")
+    assert "Access-Control-Allow-Origin" not in response.headers
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('origin', ['http://notquart.com', 'http://Quart.com'])
+@pytest.mark.parametrize("origin", ["http://notquart.com", "http://Quart.com"])
 async def test_origin_doesnt_match(app: Quart, origin: str) -> None:
     test_client = app.test_client()
-    app.config['QUART_CORS_ALLOW_ORIGIN'] = ['http://quart.com']
-    response = await test_client.options('/', headers={'Origin': origin})
-    assert 'Access-Control-Allow-Origin' not in response.headers
+    app.config["QUART_CORS_ALLOW_ORIGIN"] = ["http://quart.com"]
+    response = await test_client.options("/", headers={"Origin": origin})
+    assert "Access-Control-Allow-Origin" not in response.headers
 
 
 @pytest.mark.asyncio
 async def test_request_method_doesnt_match(app: Quart) -> None:
     test_client = app.test_client()
-    app.config['QUART_CORS_ALLOW_METHODS'] = ['GET', 'POST']
+    app.config["QUART_CORS_ALLOW_METHODS"] = ["GET", "POST"]
     response = await test_client.options(
-        '/', headers={'Origin': 'http://quart.com', 'Access-Control-Request-Method': 'DELETE'},
+        "/", headers={"Origin": "http://quart.com", "Access-Control-Request-Method": "DELETE"}
     )
-    assert response.access_control.allow_origin == {'*'}
-    assert 'Access-Control-Allow-Headers' not in response.headers
+    assert response.access_control.allow_origin == {"*"}
+    assert "Access-Control-Allow-Headers" not in response.headers
 
 
 @pytest.mark.asyncio
 async def test_request_method_match(app: Quart) -> None:
     test_client = app.test_client()
-    app.config['QUART_CORS_ALLOW_METHODS'] = ['GET', 'POST']
+    app.config["QUART_CORS_ALLOW_METHODS"] = ["GET", "POST"]
     response = await test_client.options(
-        '/', headers={'Origin': 'http://quart.com', 'Access-Control-Request-Method': 'POST'},
+        "/", headers={"Origin": "http://quart.com", "Access-Control-Request-Method": "POST"}
     )
-    assert response.access_control.allow_origin == {'*'}
-    assert response.access_control.allow_methods == {'GET', 'POST'}
+    assert response.access_control.allow_origin == {"*"}
+    assert response.access_control.allow_methods == {"GET", "POST"}
 
 
 @pytest.mark.asyncio
 async def test_request_headers(app: Quart) -> None:
     test_client = app.test_client()
-    app.config['QUART_CORS_ALLOW_HEADERS'] = ['X-Match', 'X-Other']
+    app.config["QUART_CORS_ALLOW_HEADERS"] = ["X-Match", "X-Other"]
     response = await test_client.options(
-        '/',
+        "/",
         headers={
-            'Origin': 'http://quart.com',
-            'Access-Control-Request-Method': 'POST',
-            'Access-Control-Request-Headers': 'X-Match, X-No-Match',
+            "Origin": "http://quart.com",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "X-Match, X-No-Match",
         },
     )
-    assert response.access_control.allow_origin == {'*'}
-    assert response.access_control.allow_headers == {'X-Match'}
+    assert response.access_control.allow_origin == {"*"}
+    assert response.access_control.allow_headers == {"X-Match"}

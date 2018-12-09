@@ -5,27 +5,27 @@ from typing import Any, Callable, Iterable, Optional, Union
 from quart import Blueprint, current_app, make_response, Quart, request, Response
 from quart.datastructures import HeaderSet, RequestAccessControl
 
-__all__ = ('cors',)
+__all__ = ("cors",)
 
 DEFAULTS = {
-    'QUART_CORS_ALLOW_CREDENTIALS': False,
-    'QUART_CORS_ALLOW_HEADERS': ['*'],
-    'QUART_CORS_ALLOW_METHODS': ['GET', 'HEAD', 'POST', 'OPTIONS', 'PUT', 'PATCH', 'DELETE'],
-    'QUART_CORS_ALLOW_ORIGIN': ['*'],
-    'QUART_CORS_EXPOSE_HEADERS': [''],
-    'QUART_CORS_MAX_AGE': None,
+    "QUART_CORS_ALLOW_CREDENTIALS": False,
+    "QUART_CORS_ALLOW_HEADERS": ["*"],
+    "QUART_CORS_ALLOW_METHODS": ["GET", "HEAD", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
+    "QUART_CORS_ALLOW_ORIGIN": ["*"],
+    "QUART_CORS_EXPOSE_HEADERS": [""],
+    "QUART_CORS_MAX_AGE": None,
 }
 
 
 def route_cors(
-        *,
-        allow_credentials: Optional[bool]=None,
-        allow_headers: Optional[Iterable[str]]=None,
-        allow_methods: Optional[Iterable[str]]=None,
-        allow_origin: Optional[Iterable[str]]=None,
-        expose_headers: Optional[Iterable[str]]=None,
-        max_age: Optional[Union[timedelta, float, str]]=None,
-        provide_automatic_options: bool=True,
+    *,
+    allow_credentials: Optional[bool] = None,
+    allow_headers: Optional[Iterable[str]] = None,
+    allow_methods: Optional[Iterable[str]] = None,
+    allow_origin: Optional[Iterable[str]] = None,
+    expose_headers: Optional[Iterable[str]] = None,
+    max_age: Optional[Union[timedelta, float, str]] = None,
+    provide_automatic_options: bool = True,
 ) -> Callable:
     """A decorator to add the CORS access control headers.
 
@@ -72,10 +72,11 @@ def route_cors(
             headers.
 
     """
+
     def decorator(func: Callable) -> Callable:
         if provide_automatic_options:
-            func.required_methods = getattr(func, 'required_methods', set())  # type: ignore
-            func.required_methods.add('OPTIONS')  # type: ignore
+            func.required_methods = getattr(func, "required_methods", set())  # type: ignore
+            func.required_methods.add("OPTIONS")  # type: ignore
             func.provide_automatic_options = False  # type: ignore
 
         @wraps(func)
@@ -86,23 +87,29 @@ def route_cors(
             method = request.method
             access_control = request.access_control
 
-            if provide_automatic_options and method == 'OPTIONS':
+            if provide_automatic_options and method == "OPTIONS":
                 response = await current_app.make_default_options_response()
             else:
                 response = await make_response(await func(*args, **kwargs))
 
             allow_credentials = allow_credentials or _get_config_or_default(
-                'QUART_CORS_ALLOW_CREDENTIALS',
+                "QUART_CORS_ALLOW_CREDENTIALS"
             )
-            allow_headers = _sanitise_header_set(allow_headers, 'QUART_CORS_ALLOW_HEADERS')
-            allow_methods = _sanitise_header_set(allow_methods, 'QUART_CORS_ALLOW_METHODS')
-            allow_origin = _sanitise_header_set(allow_origin, 'QUART_CORS_ALLOW_ORIGIN')
-            expose_headers = _sanitise_header_set(expose_headers, 'QUART_CORS_EXPOSE_HEADERS')
-            max_age = _sanitise_max_age(max_age, 'QUART_CORS_MAX_AGE')
+            allow_headers = _sanitise_header_set(allow_headers, "QUART_CORS_ALLOW_HEADERS")
+            allow_methods = _sanitise_header_set(allow_methods, "QUART_CORS_ALLOW_METHODS")
+            allow_origin = _sanitise_header_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
+            expose_headers = _sanitise_header_set(expose_headers, "QUART_CORS_EXPOSE_HEADERS")
+            max_age = _sanitise_max_age(max_age, "QUART_CORS_MAX_AGE")
             response = _apply_cors(
-                access_control, method, response, allow_credentials=allow_credentials,
-                allow_headers=allow_headers, allow_methods=allow_methods,
-                allow_origin=allow_origin, expose_headers=expose_headers, max_age=max_age,
+                access_control,
+                method,
+                response,
+                allow_credentials=allow_credentials,
+                allow_headers=allow_headers,
+                allow_methods=allow_methods,
+                allow_origin=allow_origin,
+                expose_headers=expose_headers,
+                max_age=max_age,
             )
             return response
 
@@ -112,14 +119,14 @@ def route_cors(
 
 
 def cors(
-        app_or_blueprint: Union[Blueprint, Quart],
-        *,
-        allow_credentials: Optional[bool]=None,
-        allow_headers: Optional[Iterable[str]]=None,
-        allow_methods: Optional[Iterable[str]]=None,
-        allow_origin: Optional[Iterable[str]]=None,
-        expose_headers: Optional[Iterable[str]]=None,
-        max_age: Optional[Union[timedelta, float, str]]=None,
+    app_or_blueprint: Union[Blueprint, Quart],
+    *,
+    allow_credentials: Optional[bool] = None,
+    allow_headers: Optional[Iterable[str]] = None,
+    allow_methods: Optional[Iterable[str]] = None,
+    allow_origin: Optional[Iterable[str]] = None,
+    expose_headers: Optional[Iterable[str]] = None,
+    max_age: Optional[Union[timedelta, float, str]] = None,
 ) -> Union[Blueprint, Quart]:
     """Apply the CORS access control headers to all routes.
 
@@ -151,60 +158,68 @@ def cors(
     """
     app_or_blueprint.after_request(
         partial(
-            _after_request, allow_credentials=allow_credentials, allow_headers=allow_headers,
-            allow_methods=allow_methods, allow_origin=allow_origin, expose_headers=expose_headers,
+            _after_request,
+            allow_credentials=allow_credentials,
+            allow_headers=allow_headers,
+            allow_methods=allow_methods,
+            allow_origin=allow_origin,
+            expose_headers=expose_headers,
             max_age=max_age,
-        ),
+        )
     )
     return app_or_blueprint
 
 
 async def _after_request(
-        response: Optional[Response],
-        *,
-        allow_credentials: Optional[bool]=None,
-        allow_headers: Optional[Iterable[str]]=None,
-        allow_methods: Optional[Iterable[str]]=None,
-        allow_origin: Optional[Iterable[str]]=None,
-        expose_headers: Optional[Iterable[str]]=None,
-        max_age: Optional[Union[timedelta, float, str]]=None,
+    response: Optional[Response],
+    *,
+    allow_credentials: Optional[bool] = None,
+    allow_headers: Optional[Iterable[str]] = None,
+    allow_methods: Optional[Iterable[str]] = None,
+    allow_origin: Optional[Iterable[str]] = None,
+    expose_headers: Optional[Iterable[str]] = None,
+    max_age: Optional[Union[timedelta, float, str]] = None,
 ) -> Optional[Response]:
-    allow_credentials = allow_credentials or _get_config_or_default(
-        'QUART_CORS_ALLOW_CREDENTIALS',
-    )
-    allow_headers = _sanitise_header_set(allow_headers, 'QUART_CORS_ALLOW_HEADERS')
-    allow_methods = _sanitise_header_set(allow_methods, 'QUART_CORS_ALLOW_METHODS')
-    allow_origin = _sanitise_header_set(allow_origin, 'QUART_CORS_ALLOW_ORIGIN')
-    expose_headers = _sanitise_header_set(expose_headers, 'QUART_CORS_EXPOSE_HEADERS')
-    max_age = _sanitise_max_age(max_age, 'QUART_CORS_MAX_AGE')
+    allow_credentials = allow_credentials or _get_config_or_default("QUART_CORS_ALLOW_CREDENTIALS")
+    allow_headers = _sanitise_header_set(allow_headers, "QUART_CORS_ALLOW_HEADERS")
+    allow_methods = _sanitise_header_set(allow_methods, "QUART_CORS_ALLOW_METHODS")
+    allow_origin = _sanitise_header_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
+    expose_headers = _sanitise_header_set(expose_headers, "QUART_CORS_EXPOSE_HEADERS")
+    max_age = _sanitise_max_age(max_age, "QUART_CORS_MAX_AGE")
 
     method = request.method
     access_control = request.access_control
 
     return _apply_cors(
-        access_control, method, response, allow_credentials=allow_credentials,
-        allow_headers=allow_headers, allow_methods=allow_methods,
-        allow_origin=allow_origin, expose_headers=expose_headers, max_age=max_age,
+        access_control,
+        method,
+        response,
+        allow_credentials=allow_credentials,
+        allow_headers=allow_headers,
+        allow_methods=allow_methods,
+        allow_origin=allow_origin,
+        expose_headers=expose_headers,
+        max_age=max_age,
     )
 
 
 def _apply_cors(
-        access_control: RequestAccessControl,
-        method: str,
-        response: Response,
-        *,
-        allow_credentials: bool,
-        allow_headers: HeaderSet,
-        allow_methods: HeaderSet,
-        allow_origin: HeaderSet,
-        expose_headers: HeaderSet,
-        max_age: Optional[float],
+    access_control: RequestAccessControl,
+    method: str,
+    response: Response,
+    *,
+    allow_credentials: bool,
+    allow_headers: HeaderSet,
+    allow_methods: HeaderSet,
+    allow_origin: HeaderSet,
+    expose_headers: HeaderSet,
+    max_age: Optional[float],
 ) -> Response:
     # Logic follows https://www.w3.org/TR/cors/
-    if '*' in allow_origin and allow_credentials:
-        raise ValueError('Cannot allow credentials with wildcard allowed origins')
+    if "*" in allow_origin and allow_credentials:
+        raise ValueError("Cannot allow credentials with wildcard allowed origins")
 
-    if getattr(response, '_QUART_CORS_APPLIED', False):
+    if getattr(response, "_QUART_CORS_APPLIED", False):
         return response
 
     origin = _get_origin_if_valid(access_control.origin, allow_origin)
@@ -212,18 +227,17 @@ def _apply_cors(
         response.access_control.allow_origin = origin
         response.access_control.allow_credentials = allow_credentials
         response.access_control.expose_headers = expose_headers
-        if (
-                method == 'OPTIONS' and
-                (access_control.request_method in allow_methods or '*' in allow_methods)
+        if method == "OPTIONS" and (
+            access_control.request_method in allow_methods or "*" in allow_methods
         ):
             response.access_control.allow_headers = allow_headers.intersection(
-                access_control.request_headers,
+                access_control.request_headers
             )
             response.access_control.allow_methods = allow_methods
             response.access_control.max_age = max_age
-        if '*' not in origin:
-            response.vary.add('Origin')
-    setattr(response, '_QUART_CORS_APPLIED', True)
+        if "*" not in origin:
+            response.vary.add("Origin")
+    setattr(response, "_QUART_CORS_APPLIED", True)
     return response
 
 
@@ -248,10 +262,10 @@ def _get_config_or_default(config_key: str) -> Any:
 
 
 def _get_origin_if_valid(origin: str, allow_origin: HeaderSet) -> Optional[HeaderSet]:
-    if origin == '':
+    if origin == "":
         return None
-    elif '*' in allow_origin:
-        return HeaderSet(['*'])
+    elif "*" in allow_origin:
+        return HeaderSet(["*"])
     elif origin in allow_origin:
         return HeaderSet([origin])
     else:
