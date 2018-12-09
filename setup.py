@@ -12,7 +12,7 @@ with open(os.path.join(PROJECT_ROOT, 'README.rst')) as file_:
     long_description = file_.read()
 
 INSTALL_REQUIRES = [
-    'Quart>=0.6.0',
+    'Quart>=0.6.11',
 ]
 
 setup(
