@@ -230,9 +230,12 @@ def _apply_cors(
         if method == "OPTIONS" and (
             access_control.request_method in allow_methods or "*" in allow_methods
         ):
-            response.access_control.allow_headers = allow_headers.intersection(
-                access_control.request_headers
-            )
+            if "*" in allow_headers:
+                response.access_control.allow_headers = access_control.request_headers
+            else:
+                response.access_control.allow_headers = allow_headers.intersection(
+                    access_control.request_headers
+                )
             response.access_control.allow_methods = allow_methods
             response.access_control.max_age = max_age
         if "*" not in origin:
