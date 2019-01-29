@@ -1,3 +1,8 @@
+0.1.2 2019-01-29
+----------------
+
+* Bugfix allow all request_headers when allow_headers is set to "*".
+
 0.1.1 2018-12-09
 ----------------
 
