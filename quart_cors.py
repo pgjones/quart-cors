@@ -1,6 +1,6 @@
 from datetime import timedelta
 from functools import partial, wraps
-from typing import Any, Callable, Iterable, Optional, Union
+from typing import Any, Callable, Iterable, Optional, TypeVar, Union
 
 from quart import Blueprint, current_app, make_response, Quart, request, Response
 from quart.datastructures import HeaderSet, RequestAccessControl
@@ -118,8 +118,11 @@ def route_cors(
     return decorator
 
 
+T = TypeVar("T", Blueprint, Quart)
+
+
 def cors(
-    app_or_blueprint: Union[Blueprint, Quart],
+    app_or_blueprint: T,
     *,
     allow_credentials: Optional[bool] = None,
     allow_headers: Optional[Iterable[str]] = None,
@@ -127,7 +130,7 @@ def cors(
     allow_origin: Optional[Iterable[str]] = None,
     expose_headers: Optional[Iterable[str]] = None,
     max_age: Optional[Union[timedelta, float, str]] = None,
-) -> Union[Blueprint, Quart]:
+) -> T:
     """Apply the CORS access control headers to all routes.
 
     This should be used on a Quart (app) instance or a Blueprint

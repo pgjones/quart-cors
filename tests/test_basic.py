@@ -41,7 +41,7 @@ async def test_preflight_request(route_cors_app: Quart) -> None:
         "PATCH",
         "DELETE",
     }
-    assert response.access_control.max_age == 5
+    assert response.access_control.max_age == 5.0
 
 
 @pytest.mark.asyncio

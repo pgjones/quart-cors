@@ -1,6 +1,8 @@
 include CHANGELOG.rst
 include LICENSE
+include pyproject.toml
 include README.rst
+include setup.cfg
 recursive-include quart_cors *.py
 recursive-include tests *.py
 exclude .gitlab-ci.yml
