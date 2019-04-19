@@ -44,4 +44,5 @@ setup(
         'pytest',
         'pytest-asyncio',
     ],
+    include_package_data=True,
 )
