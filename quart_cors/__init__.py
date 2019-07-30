@@ -5,7 +5,7 @@ from typing import Any, Callable, Iterable, Optional, TypeVar, Union
 from quart import Blueprint, current_app, make_response, Quart, request, Response
 from quart.datastructures import HeaderSet, RequestAccessControl
 
-__all__ = ("cors",)
+__all__ = ("cors", "route_cors")
 
 DEFAULTS = {
     "QUART_CORS_ALLOW_CREDENTIALS": False,
