@@ -3,8 +3,8 @@ import sys
 
 from setuptools import setup, find_packages
 
-if sys.version_info < (3,6,1):
-    sys.exit('Python 3.6.1 is the minimum required version')
+if sys.version_info < (3,7,0):
+    sys.exit('Python 3.7.0 is the minimum required version')
 
 PROJECT_ROOT = os.path.dirname(__file__)
 
@@ -18,7 +18,7 @@ INSTALL_REQUIRES = [
 setup(
     name='Quart-CORS',
     version='0.1.3',
-    python_requires='>=3.6.1',
+    python_requires='>=3.7.0',
     description="A Quart extension to provide Cross Origin Resource Sharing, access control, support.",
     long_description=long_description,
     url='https://gitlab.com/pgjones/quart-cors/',
@@ -33,7 +33,7 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
