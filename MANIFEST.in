@@ -1,7 +1,7 @@
 include CHANGELOG.rst
 include LICENSE
-include py.typed
 include pyproject.toml
+include quart_cors/py.typed
 include README.rst
 include setup.cfg
 recursive-include quart_cors *.py
