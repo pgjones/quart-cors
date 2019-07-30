@@ -2,10 +2,10 @@ from datetime import timedelta
 from functools import partial, wraps
 from typing import Any, Callable, Iterable, Optional, TypeVar, Union
 
-from quart import Blueprint, current_app, make_response, Quart, request, Response
+from quart import abort, Blueprint, current_app, make_response, Quart, request, Response, websocket
 from quart.datastructures import HeaderSet, RequestAccessControl
 
-__all__ = ("cors", "route_cors")
+__all__ = ("cors", "route_cors", "websocket_cors")
 
 DEFAULTS = {
     "QUART_CORS_ALLOW_CREDENTIALS": False,
@@ -112,6 +112,47 @@ def route_cors(
                 max_age=max_age,
             )
             return response
+
+        return wrapper
+
+    return decorator
+
+
+def websocket_cors(*, allow_origin: Optional[Iterable[str]] = None) -> Callable:
+    """A decorator to control CORS websocket requests.
+
+    This should be used to wrap a websocket handler (or view function)
+    to control CORS access to the websocket. Note that it is important
+    that this decorator be wrapped by the websocket decorator and not
+    vice, versa, as below.
+
+    .. code-block:: python
+
+        @app.websocket('/')
+        @websocket_cors()
+        async def index():
+            ...
+
+    Arguments:
+        allow_origin: The origins from which cross origin requests are
+            accepted. This is either a list, a regex or a single
+            domain. Note the full domain including scheme is required.
+
+    """
+
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+            nonlocal allow_origin
+
+            allow_origin = _sanitise_header_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
+            access_control = websocket.access_control
+            origin = _get_origin_if_valid(access_control.origin, allow_origin)
+            if origin is not None:
+                response = await func(*args, **kwargs)
+                return response
+            else:
+                abort(400)
 
         return wrapper
 
