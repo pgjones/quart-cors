@@ -4,95 +4,173 @@ Quart-CORS
 |Build Status| |pypi| |python| |license|
 
 Quart-CORS is an extension for `Quart
-<https://gitlab.com/pgjones/quart>`_ to handle `Cross Origin Resource
-Sharing <http://www.w3.org/TR/cors/>`_, CORS (also known as access
-control).
+<https://gitlab.com/pgjones/quart>`_ to enable and control `Cross
+Origin Resource Sharing <http://www.w3.org/TR/cors/>`_, CORS (also
+known as access control).
 
 CORS is required to share resources in browsers due to the `Same
 Origin Policy <https://en.wikipedia.org/wiki/Same-origin_policy>`_
-which prevents resources being read and limits write actions from a
-different origin. An origin in this case is defined as the scheme,
-host and port combination.
+which prevents resources being used from a different origin. An origin
+in this case is defined as the scheme, host and port combined and a
+resource corresponds to a path.
 
 In practice the Same Origin Policy means that a browser visiting
 ``http://quart.com`` will prevent the response of ``GET
 http://api.com`` being read. It will also prevent requests such as
-``POST http://api.com``. Note that embedding is allowed e.g. ``<img
-src="http://api.com/img.gif">``.
+``POST http://api.com``. Note that CORS applies to browser initiated
+requests, non-browser clients such as ``requests`` are not subject to
+CORS restrictions.
 
-CORS allows the server to indicate to the browser that certain
-resources can be used. It does so for GET requests by returning
-headers that indicate the origins that can use the resource whereas
-for other requests the browser will send a preflight OPTIONS request
-and then inspect the headers in the response.
+CORS allows a server to indicate to a browser that certain resources
+can be used, contrary to the Same Origin Policy. It does so via
+access-control headers that inform the browser how the resource can be
+used. For GET requests these headers are sent in the response. For
+non-GET requests the browser must ask the server for the
+access-control headers before sending the actual request, it does so
+via a preflight OPTIONS request.
+
+The Same Origin Policy does not apply to WebSockets, and hence there
+is no need for CORS. Instead the server alone is responsible for
+deciding if the WebSocket is allowed and it should do so by inspecting
+the WebSocket-request origin header.
 
 Simple (GET) requests should return CORS headers specifying the
-allowed origins (which can be any origin, ``*``) and whether
-credentials should be shared. If credentials can be shared the origins
-must be specific and not a wildcard.
+origins that are allowed to use the resource (response). This can be
+any origin, ``*`` (wildcard), or a list of specific origins. The
+response should also include a CORS header specifying whether
+response-credentials e.g. cookies can be used. Note that if credential
+sharing is allowed the allowed origins must be specific and not a
+wildcard.
 
-Preflight requests should return CORS headers specifying the allowed
-origins, methods and headers in the request, whehter credentials
-should be shared and what response headers should be exposed.
+Preflight requests should return CORS headers specifying the origins
+allowed to use the resource, the methods and headers allowed to be
+sent in a request to the resource, whether response credentials can be
+used, and finally which response headers can be used.
+
+Note that certain actions are allowed in the Same Origin Policy such
+as embedding e.g. ``<img src="http://api.com/img.gif">`` and simple
+POSTs. For the purposes of this readme though these complications are
+ignored.
+
+The CORS access control response headers are,
+
+================================ ===========================================================
+Header name                      Meaning
+-------------------------------- -----------------------------------------------------------
+Access-Control-Allow-Origin      Origins that are allowed to use the resource.
+Access-Control-Allow-Credentials Can credentials be shared.
+Access-Control-Allow-Methods     Methods that may be used in requests to the resource.
+Access-Control-Allow-Headers     Headers that may be sent in requests to the resource.
+Access-Control-Expose-Headers    Headers that may be read in the response from the resource.
+Access-Control-Max-Age           Maximum age to cache the CORS headers for the resource.
+================================ ===========================================================
+
+Quart-CORS uses the same naming (without the Access-Control prefix)
+for it's arguments and settings when they relate to the same meaning.
 
 Usage
 -----
 
 To add CORS access control headers to all of the routes in the
-application, simply apply the ``cors`` function to the application,
+application, simply apply the ``cors`` function to the application, or
+to a specific blueprint,
 
 .. code-block:: python
 
     app = Quart(__name__)
-    app = cors(app)
+    app = cors(app, **settings)
 
-alternatively if you wish to add CORS selectively either apply the
-``cors`` function to a blueprint or the ``route_cors`` function to
-a route,
+    blueprint = Blueprint(__name__)
+    blueprint = cors(blueprint, **settings)
+
+alternatively if you wish to add CORS selectively by resource, apply
+the ``route_cors`` function to a route, or the ``websocket_cors``
+function to a WebSocket,
 
 .. code-block:: python
 
-    blueprint = Blueprint(__name__)
-    blueprint = cors(blueprint)
-
-    @blueprint.route('/')
-    @route_cors()
+    @app.route('/')
+    @route_cors(**settings)
     async def handler():
         ...
 
-In addition defaults can be specified in the application
+    @app.websocket('/')
+    @websocket_cors(allow_origin=...)
+    async def handler():
+        ...
+
+The ``settings`` are these arguments,
+
+================= ===========================
+Argument          type
+----------------- ---------------------------
+allow_origin      Union[Set[str], str]
+allow_credentials bool
+allow_methods     Union[Set[str], str]
+allow_headers     Union[Set[str], str]
+expose_headers    Union[Set[str], str]
+max_age           Union[int, flot, timedelta]
+================= ===========================
+
+which correspond to the CORS headers noted above. Note that all
+settings are optional and defaults can be specified in the application
 configuration,
 
 ============================ ========
 Configuration key            type
 ---------------------------- --------
-QUART_CORS_ALLOW_CREDENTIALS bool
-QUART_CORS_ALLOW_HEADERS     Set[str]
-QUART_CORS_ALLOW_METHODS     Set[str]
 QUART_CORS_ALLOW_ORIGIN      Set[str]
+QUART_CORS_ALLOW_CREDENTIALS bool
+QUART_CORS_ALLOW_METHODS     Set[str]
+QUART_CORS_ALLOW_HEADERS     Set[str]
 QUART_CORS_EXPOSE_HEADERS    Set[str]
 QUART_CORS_MAX_AGE           float
 ============================ ========
 
-Both the ``cors`` and ``route_cors`` functions take these arguments,
+The ``websocket_cors`` decorator only takes an ``allow_origin``
+argument which defines the origins that are allowed to use the
+WebSocket. A WebSocket request from a disallowed origin will be
+responded to with a 400 response.
 
-================= ===========================
-Argument          type
------------------ ---------------------------
-allow_credentials bool
-allow_headers     Union[Set[str], str]
-allow_methods     Union[Set[str], str]
-allow_origin      Union[Set[str], str]
-expose_headers    Union[Set[str], str]
-max_age           Union[int, flot, timedelta]
-================= ===========================
+Simple examples
+~~~~~~~~~~~~~~~
 
-.. note::
+To allow an app to be used from any origin (not recommended as it is
+too permissive),
 
-   The Same Origin Policy does not apply to websockets, and hence this
-   extension does not add CORS headers to websocket routes. In
-   addition the ``route_cors`` function should not be used on a
-   websocket route.
+.. code-block:: python
+
+    app = Quart(__name__)
+    app = cors(app, allow_origin="*")
+
+To allow a route or WebSocket to be used from another specific domain,
+``https://quart.com``,
+
+.. code-block:: python
+
+    @app.route('/')
+    @route_cors(allow_origin="https://quart.com")
+    async def handler():
+        ...
+
+    @app.websocket('/')
+    @websocket_cors(allow_origin="https://quart.com")
+    async def handler():
+        ...
+
+To allow a JSON POST request to an API route, from ``https://quart.com``,
+
+.. code-block:: python
+
+    @app.route('/', methods=["POST"])
+    @route_cors(
+        allow_headers=["content-type"],
+        allow_methods=["POST"],
+        allow_origin=["https://quart.com"],
+    )
+    async def handler():
+        data = await request.get_json()
+        ...
 
 Contributing
 ------------
@@ -110,7 +188,7 @@ The best way to test Quart-CORS is with Tox,
 
 .. code-block:: console
 
-    $ pipenv install tox
+    $ pip install tox
     $ tox
 
 this will check the code style and run the tests.
