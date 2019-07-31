@@ -145,14 +145,10 @@ def websocket_cors(*, allow_origin: Optional[Iterable[str]] = None) -> Callable:
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
             nonlocal allow_origin
 
-            allow_origin = _sanitise_header_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
-            access_control = websocket.access_control
-            origin = _get_origin_if_valid(access_control.origin, allow_origin)
-            if origin is not None:
-                response = await func(*args, **kwargs)
-                return response
-            else:
-                abort(400)
+            # Will abort if origin is invalid
+            _apply_websocket_cors(allow_origin=allow_origin)
+
+            return await func(*args, **kwargs)
 
         return wrapper
 
@@ -211,6 +207,7 @@ def cors(
             max_age=max_age,
         )
     )
+    app_or_blueprint.before_websocket(partial(_apply_websocket_cors, allow_origin=allow_origin))
     return app_or_blueprint
 
 
@@ -286,6 +283,14 @@ def _apply_cors(
             response.vary.add("Origin")
     setattr(response, "_QUART_CORS_APPLIED", True)
     return response
+
+
+async def _apply_websocket_cors(*, allow_origin: Optional[Iterable[str]] = None) -> None:
+    allow_origin = _sanitise_header_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
+    access_control = websocket.access_control
+    origin = _get_origin_if_valid(access_control.origin, allow_origin)
+    if origin is None:
+        abort(400)
 
 
 def _sanitise_header_set(value: Optional[Iterable[str]], config_key: str) -> HeaderSet:
