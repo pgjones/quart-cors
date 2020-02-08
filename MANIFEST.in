@@ -1,9 +1,9 @@
 include CHANGELOG.rst
 include LICENSE
 include pyproject.toml
-include quart_cors/py.typed
+include src/quart_cors/py.typed
 include README.rst
 include setup.cfg
-recursive-include quart_cors *.py
+recursive-include src/quart_cors *.py
 recursive-include tests *.py
 exclude .gitlab-ci.yml

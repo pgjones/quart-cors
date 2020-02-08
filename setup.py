@@ -38,7 +38,8 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    packages=find_packages(exclude=["tests", "tests.*"]),
+    packages=find_packages("src"),
+    package_dir={"": "src"},
     py_modules=['quart_cors'],
     install_requires=INSTALL_REQUIRES,
     tests_require=INSTALL_REQUIRES + [
