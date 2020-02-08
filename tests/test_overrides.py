@@ -1,5 +1,6 @@
 import pytest
 from quart import Blueprint, Quart
+from werkzeug.datastructures import HeaderSet
 
 from quart_cors import cors, route_cors
 
@@ -11,14 +12,14 @@ def _app() -> Quart:
     app.config["QUART_CORS_ALLOW_METHODS"] = ["GET", "POST"]
 
     blueprint = Blueprint("blue", __name__)
-    blueprint = cors(blueprint, allow_origin=["http://blueprint.com"])
+    blueprint = cors(blueprint, allow_origin="http://blueprint.com")
 
     @app.route("/app")
     async def app_route() -> str:
         return "App"
 
     @app.route("/route")
-    @route_cors(allow_origin=["http://route.com"])
+    @route_cors(allow_origin="http://route.com")
     async def route() -> str:
         return "Route"
 
@@ -27,7 +28,7 @@ def _app() -> Quart:
         return "Blueprint"
 
     @blueprint.route("/blueprint_route")
-    @route_cors(allow_origin=["http://blueprint.route.com"])
+    @route_cors(allow_origin="http://blueprint.route.com")
     async def blueprint_route() -> str:
         return "Blueprint Route"
 
@@ -51,8 +52,8 @@ async def test_match(app: Quart, origin: str, path: str) -> None:
     response = await test_client.options(
         path, headers={"Origin": origin, "Access-Control-Request-Method": "POST"}
     )
-    assert response.access_control.allow_origin == {origin}
-    assert response.access_control.allow_methods == {"GET", "POST"}
+    assert response.access_control_allow_origin == origin
+    assert response.access_control_allow_methods == HeaderSet(["GET", "POST"])
 
 
 @pytest.mark.asyncio

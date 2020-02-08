@@ -10,7 +10,7 @@ def _websocket_cors_app() -> Quart:
     app = Quart(__name__)
 
     @app.websocket("/")
-    @websocket_cors(allow_origin=["https://quart.com"])
+    @websocket_cors(allow_origin="https://quart.com")
     async def ws() -> None:
         await websocket.send(b"a")
 
@@ -24,7 +24,7 @@ async def test_websocket_allowed(websocket_cors_app: Quart) -> None:
         "/", headers={"Origin": "https://quart.com"}
     ) as test_websocket:
         data = await test_websocket.receive()
-    assert data == b"a"
+    assert data == b"a"  # type: ignore
 
 
 @pytest.mark.asyncio

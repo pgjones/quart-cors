@@ -1,5 +1,6 @@
 import pytest
 from quart import Quart
+from werkzeug.datastructures import HeaderSet
 
 from quart_cors import route_cors
 
@@ -43,7 +44,7 @@ async def test_request_method_doesnt_match(app: Quart) -> None:
     response = await test_client.options(
         "/", headers={"Origin": "http://quart.com", "Access-Control-Request-Method": "DELETE"}
     )
-    assert response.access_control.allow_origin == {"*"}
+    assert response.access_control_allow_origin == "*"
     assert "Access-Control-Allow-Headers" not in response.headers
 
 
@@ -54,8 +55,8 @@ async def test_request_method_match(app: Quart) -> None:
     response = await test_client.options(
         "/", headers={"Origin": "http://quart.com", "Access-Control-Request-Method": "POST"}
     )
-    assert response.access_control.allow_origin == {"*"}
-    assert response.access_control.allow_methods == {"GET", "POST"}
+    assert response.access_control_allow_origin == "*"
+    assert response.access_control_allow_methods == HeaderSet(["GET", "POST"])
 
 
 @pytest.mark.asyncio
@@ -70,5 +71,5 @@ async def test_request_headers(app: Quart) -> None:
             "Access-Control-Request-Headers": "X-Match, X-No-Match",
         },
     )
-    assert response.access_control.allow_origin == {"*"}
-    assert response.access_control.allow_headers == {"X-Match"}
+    assert response.access_control_allow_origin == "*"
+    assert response.access_control_allow_headers == HeaderSet(["X-Match"])

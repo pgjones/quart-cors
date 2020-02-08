@@ -34,13 +34,12 @@ is no need for CORS. Instead the server alone is responsible for
 deciding if the WebSocket is allowed and it should do so by inspecting
 the WebSocket-request origin header.
 
-Simple (GET) requests should return CORS headers specifying the
-origins that are allowed to use the resource (response). This can be
-any origin, ``*`` (wildcard), or a list of specific origins. The
-response should also include a CORS header specifying whether
-response-credentials e.g. cookies can be used. Note that if credential
-sharing is allowed the allowed origins must be specific and not a
-wildcard.
+Simple (GET) requests should return CORS headers specifying the origin
+that is allowed to use the resource (response). This can be any
+origin, or ``*`` (wildcard). The response should also include a CORS
+header specifying whether response-credentials e.g. cookies can be
+used. Note that if credential sharing is allowed the allowed origins
+must be specific and not a wildcard.
 
 Preflight requests should return CORS headers specifying the origins
 allowed to use the resource, the methods and headers allowed to be
@@ -54,16 +53,16 @@ ignored.
 
 The CORS access control response headers are,
 
-================================ ===========================================================
+================================ ================================================================
 Header name                      Meaning
--------------------------------- -----------------------------------------------------------
-Access-Control-Allow-Origin      Origins that are allowed to use the resource.
+-------------------------------- ----------------------------------------------------------------
+Access-Control-Allow-Origin      The origin that is allowed to use the resource or * (wildcard).
 Access-Control-Allow-Credentials Can credentials be shared.
 Access-Control-Allow-Methods     Methods that may be used in requests to the resource.
 Access-Control-Allow-Headers     Headers that may be sent in requests to the resource.
 Access-Control-Expose-Headers    Headers that may be read in the response from the resource.
 Access-Control-Max-Age           Maximum age to cache the CORS headers for the resource.
-================================ ===========================================================
+================================ ================================================================
 
 Quart-CORS uses the same naming (without the Access-Control prefix)
 for it's arguments and settings when they relate to the same meaning.
@@ -104,7 +103,7 @@ The ``settings`` are these arguments,
 ================= ===========================
 Argument          type
 ----------------- ---------------------------
-allow_origin      Union[Set[str], str]
+allow_origin      str
 allow_credentials bool
 allow_methods     Union[Set[str], str]
 allow_headers     Union[Set[str], str]
@@ -119,7 +118,7 @@ configuration,
 ============================ ========
 Configuration key            type
 ---------------------------- --------
-QUART_CORS_ALLOW_ORIGIN      Set[str]
+QUART_CORS_ALLOW_ORIGIN      str
 QUART_CORS_ALLOW_CREDENTIALS bool
 QUART_CORS_ALLOW_METHODS     Set[str]
 QUART_CORS_ALLOW_HEADERS     Set[str]
@@ -128,7 +127,7 @@ QUART_CORS_MAX_AGE           float
 ============================ ========
 
 The ``websocket_cors`` decorator only takes an ``allow_origin``
-argument which defines the origins that are allowed to use the
+argument which defines the origin that is allowed to use the
 WebSocket. A WebSocket request from a disallowed origin will be
 responded to with a 400 response.
 
@@ -166,7 +165,7 @@ To allow a JSON POST request to an API route, from ``https://quart.com``,
     @route_cors(
         allow_headers=["content-type"],
         allow_methods=["POST"],
-        allow_origin=["https://quart.com"],
+        allow_origin="https://quart.com",
     )
     async def handler():
         data = await request.get_json()
