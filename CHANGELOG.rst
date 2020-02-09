@@ -1,3 +1,11 @@
+0.3.0 2020-02-09
+----------------
+
+* Support Python 3.8.
+* Support Quart >= 0.11.1 - with this only a single origin (or
+  wildcard) can be returned as the Access-Control-Allow-Origin header,
+  as per the specification.
+
 0.2.0 2019-08-02
 ----------------
 
