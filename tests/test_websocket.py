@@ -10,7 +10,7 @@ def _websocket_cors_app() -> Quart:
     app = Quart(__name__)
 
     @app.websocket("/")
-    @websocket_cors(allow_origin="https://quart.com")
+    @websocket_cors(allow_origin=["https://quart.com"])
     async def ws() -> None:
         await websocket.send(b"a")
 

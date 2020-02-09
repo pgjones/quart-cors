@@ -12,14 +12,14 @@ def _app() -> Quart:
     app.config["QUART_CORS_ALLOW_METHODS"] = ["GET", "POST"]
 
     blueprint = Blueprint("blue", __name__)
-    blueprint = cors(blueprint, allow_origin="http://blueprint.com")
+    blueprint = cors(blueprint, allow_origin=["http://blueprint.com"])
 
     @app.route("/app")
     async def app_route() -> str:
         return "App"
 
     @app.route("/route")
-    @route_cors(allow_origin="http://route.com")
+    @route_cors(allow_origin=["http://route.com"])
     async def route() -> str:
         return "Route"
 
@@ -28,7 +28,7 @@ def _app() -> Quart:
         return "Blueprint"
 
     @blueprint.route("/blueprint_route")
-    @route_cors(allow_origin="http://blueprint.route.com")
+    @route_cors(allow_origin=["http://blueprint.route.com"])
     async def blueprint_route() -> str:
         return "Blueprint Route"
 
