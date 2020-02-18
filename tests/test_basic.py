@@ -1,4 +1,6 @@
+import re
 from datetime import timedelta
+from typing import Pattern, Union
 
 import pytest
 from quart import Blueprint, Quart
@@ -71,3 +73,27 @@ async def test_blueprint_cors() -> None:
     test_client = app.test_client()
     response = await test_client.get("/", headers={"Origin": "https://quart.com"})
     assert response.access_control_allow_origin == "*"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "allowed_origin, expected",
+    [
+        ("*", "*"),
+        ("https://quart.com", "https://quart.com"),
+        (re.compile(r"https:\/\/.*\.?quart\.com"), "https://quart.com"),
+    ],
+)
+async def test_regex_matching(allowed_origin: Union[Pattern, str], expected: str) -> None:
+    app = Quart(__name__)
+    app.config["QUART_CORS_ALLOW_ORIGIN"] = [allowed_origin]
+
+    @app.route("/")
+    async def index() -> str:
+        return "Hello"
+
+    app = cors(app)
+
+    test_client = app.test_client()
+    response = await test_client.get("/", headers={"Origin": "https://quart.com"})
+    assert response.access_control_allow_origin == expected

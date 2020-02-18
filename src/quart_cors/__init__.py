@@ -1,11 +1,13 @@
 from datetime import timedelta
 from functools import partial, wraps
-from typing import Any, Callable, Iterable, Optional, Set, TypeVar, Union
+from typing import Any, Callable, Iterable, Optional, Pattern, Set, TypeVar, Union
 
 from quart import abort, Blueprint, current_app, make_response, Quart, request, Response, websocket
 from werkzeug.datastructures import HeaderSet
 
 __all__ = ("cors", "route_cors", "websocket_cors")
+
+OriginType = Union[Pattern, str]
 
 DEFAULTS = {
     "QUART_CORS_ALLOW_CREDENTIALS": False,
@@ -22,7 +24,7 @@ def route_cors(
     allow_credentials: Optional[bool] = None,
     allow_headers: Optional[Iterable[str]] = None,
     allow_methods: Optional[Iterable[str]] = None,
-    allow_origin: Optional[Iterable[str]] = None,
+    allow_origin: Optional[Iterable[OriginType]] = None,
     expose_headers: Optional[Iterable[str]] = None,
     max_age: Optional[Union[timedelta, float, str]] = None,
     provide_automatic_options: bool = True,
@@ -51,8 +53,10 @@ def route_cors(
         allow_methods: The methods (list) or method (str) that a cross
             origin request can use.
         allow_origin: The origins from which cross origin requests are
-            accepted. This is either a list, a regex or a single
-            domain. Note the full domain including scheme is required.
+            accepted. This is either a list of re.complied regex or
+            strings, or a single re.compiled regex or string, or the
+            wildward string, `*`. Note the full domain including scheme
+            is required.
         expose_headers: The additional headers (list) or header (str)
             to expose to the client of a cross origin request.
         max_age: The maximum time the response can be cached by the
@@ -96,7 +100,7 @@ def route_cors(
             )
             allow_headers = _sanitise_header_set(allow_headers, "QUART_CORS_ALLOW_HEADERS")
             allow_methods = _sanitise_header_set(allow_methods, "QUART_CORS_ALLOW_METHODS")
-            allow_origin = _sanitise_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
+            allow_origin = _sanitise_origin_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
             expose_headers = _sanitise_header_set(expose_headers, "QUART_CORS_EXPOSE_HEADERS")
             max_age = _sanitise_max_age(max_age, "QUART_CORS_MAX_AGE")
             response = _apply_cors(
@@ -119,7 +123,7 @@ def route_cors(
     return decorator
 
 
-def websocket_cors(*, allow_origin: Optional[Iterable[str]] = None) -> Callable:
+def websocket_cors(*, allow_origin: Optional[Iterable[OriginType]] = None) -> Callable:
     """A decorator to control CORS websocket requests.
 
     This should be used to wrap a websocket handler (or view function)
@@ -135,9 +139,11 @@ def websocket_cors(*, allow_origin: Optional[Iterable[str]] = None) -> Callable:
             ...
 
     Arguments:
-        allow_origin: The origin from which cross origin request is
-            accepted. This is either a single domain or the wildcard *.
-            Note the full domain including scheme is required.
+        allow_origin: The origins from which cross origin requests are
+            accepted. This is either a list of re.complied regex or
+            strings, or a single re.compiled regex or string, or the
+            wildward string, `*`. Note the full domain including scheme
+            is required.
 
     """
 
@@ -165,7 +171,7 @@ def cors(
     allow_credentials: Optional[bool] = None,
     allow_headers: Optional[Iterable[str]] = None,
     allow_methods: Optional[Iterable[str]] = None,
-    allow_origin: Optional[Iterable[str]] = None,
+    allow_origin: Optional[Iterable[OriginType]] = None,
     expose_headers: Optional[Iterable[str]] = None,
     max_age: Optional[Union[timedelta, float, str]] = None,
 ) -> T:
@@ -188,9 +194,11 @@ def cors(
             name, a cross origin request is allowed to access.
         allow_methods: The methods (list) or method (str) that a cross
             origin request can use.
-        allow_origin: The origin from which cross origin request is
-            accepted. This is either a single domain or the wildcard *.
-            Note the full domain including scheme is required.
+        allow_origin: The origins from which cross origin requests are
+            accepted. This is either a list of re.complied regex or
+            strings, or a single re.compiled regex or string, or the
+            wildward string, `*`. Note the full domain including scheme
+            is required.
         expose_headers: The additional headers (list) or header (str)
             to expose to the client of a cross origin request.
         max_age: The maximum time the response can be cached by the
@@ -218,14 +226,14 @@ async def _after_request(
     allow_credentials: Optional[bool] = None,
     allow_headers: Optional[Iterable[str]] = None,
     allow_methods: Optional[Iterable[str]] = None,
-    allow_origin: Optional[Iterable[str]] = None,
+    allow_origin: Optional[Iterable[OriginType]] = None,
     expose_headers: Optional[Iterable[str]] = None,
     max_age: Optional[Union[timedelta, float, str]] = None,
 ) -> Optional[Response]:
     allow_credentials = allow_credentials or _get_config_or_default("QUART_CORS_ALLOW_CREDENTIALS")
     allow_headers = _sanitise_header_set(allow_headers, "QUART_CORS_ALLOW_HEADERS")
     allow_methods = _sanitise_header_set(allow_methods, "QUART_CORS_ALLOW_METHODS")
-    allow_origin = _sanitise_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
+    allow_origin = _sanitise_origin_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
     expose_headers = _sanitise_header_set(expose_headers, "QUART_CORS_EXPOSE_HEADERS")
     max_age = _sanitise_max_age(max_age, "QUART_CORS_MAX_AGE")
 
@@ -256,7 +264,7 @@ def _apply_cors(
     allow_credentials: bool,
     allow_headers: HeaderSet,
     allow_methods: HeaderSet,
-    allow_origin: Set[str],
+    allow_origin: Set[OriginType],
     expose_headers: HeaderSet,
     max_age: Optional[int],
 ) -> Response:
@@ -290,19 +298,21 @@ def _apply_cors(
     return response
 
 
-async def _apply_websocket_cors(*, allow_origin: Optional[Iterable[str]] = None) -> None:
-    allow_origin = _sanitise_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
+async def _apply_websocket_cors(*, allow_origin: Optional[Iterable[OriginType]] = None) -> None:
+    allow_origin = _sanitise_origin_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
     origin = _get_origin_if_valid(websocket.origin, allow_origin)
     if origin is None:
         abort(400)
 
 
-def _sanitise_set(value: Optional[Union[str, Iterable[str]]], config_key: str) -> Set[str]:
+def _sanitise_origin_set(
+    value: Optional[Union[OriginType, Iterable[OriginType]]], config_key: str
+) -> Set[OriginType]:
     if value is None:
         value = _get_config_or_default(config_key)
-    elif isinstance(value, str):
+    elif isinstance(value, (Pattern, str)):
         value = [value]
-    return set(value)
+    return set(value)  # type: ignore
 
 
 def _sanitise_header_set(value: Optional[Union[str, Iterable[str]]], config_key: str) -> HeaderSet:
@@ -327,12 +337,16 @@ def _get_config_or_default(config_key: str) -> Any:
     return current_app.config.get(config_key, DEFAULTS[config_key])
 
 
-def _get_origin_if_valid(origin: Optional[str], allow_origin: Set[str]) -> Optional[str]:
+def _get_origin_if_valid(origin: Optional[str], allow_origin: Set[OriginType]) -> Optional[str]:
     if origin is None or origin == "":
         return None
-    elif "*" in allow_origin:
-        return "*"
-    elif origin in allow_origin:
-        return origin
-    else:
-        return None
+
+    for allowed in allow_origin:
+        if allowed == "*":
+            return "*"
+        if isinstance(allowed, Pattern) and allowed.match(origin):
+            return origin
+        elif origin == allowed:
+            return origin
+
+    return None

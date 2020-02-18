@@ -101,31 +101,31 @@ function to a WebSocket,
 
 The ``settings`` are these arguments,
 
-================= ===========================
+================= ====================================================
 Argument          type
------------------ ---------------------------
-allow_origin      Union[Set[str], str]
+----------------- ----------------------------------------------------
+allow_origin      Union[Set[Union[Pattern, str]], Union[Pattern, str]]
 allow_credentials bool
 allow_methods     Union[Set[str], str]
 allow_headers     Union[Set[str], str]
 expose_headers    Union[Set[str], str]
 max_age           Union[int, flot, timedelta]
-================= ===========================
+================= ====================================================
 
 which correspond to the CORS headers noted above. Note that all
 settings are optional and defaults can be specified in the application
 configuration,
 
-============================ ========
+============================ ========================
 Configuration key            type
----------------------------- --------
-QUART_CORS_ALLOW_ORIGIN      Set[str]
+---------------------------- ------------------------
+QUART_CORS_ALLOW_ORIGIN      Set[Union[Pattern, str]]
 QUART_CORS_ALLOW_CREDENTIALS bool
 QUART_CORS_ALLOW_METHODS     Set[str]
 QUART_CORS_ALLOW_HEADERS     Set[str]
 QUART_CORS_EXPOSE_HEADERS    Set[str]
 QUART_CORS_MAX_AGE           float
-============================ ========
+============================ ========================
 
 The ``websocket_cors`` decorator only takes an ``allow_origin``
 argument which defines the origins that are allowed to use the
@@ -155,6 +155,21 @@ To allow a route or WebSocket to be used from another specific domain,
 
     @app.websocket('/')
     @websocket_cors(allow_origin="https://quart.com")
+    async def handler():
+        ...
+
+To allow a route or WebSocket to be used from any subdomain (but not
+the domain itself) of ``quart.com``,
+
+.. code-block:: python
+
+    @app.route('/')
+    @route_cors(allow_origin=re.compile(r"https:\/\/.*\.quart\.com"))
+    async def handler():
+        ...
+
+    @app.websocket('/')
+    @websocket_cors(allow_origin=re.compile(r"https:\/\/.*\.quart\.com"))
     async def handler():
         ...
 
