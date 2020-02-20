@@ -215,7 +215,7 @@ This README is the best place to start, after that try opening an
 `issue <https://gitlab.com/pgjones/quart-cors/issues>`_.
 
 
-.. |Build Status| image:: https://gitlab.com/pgjones/quart-cors/badges/master/build.svg
+.. |Build Status| image:: https://gitlab.com/pgjones/quart-cors/badges/master/pipeline.svg
    :target: https://gitlab.com/pgjones/quart-cors/commits/master
 
 .. |pypi| image:: https://img.shields.io/pypi/v/quart-cors.svg
