@@ -132,6 +132,10 @@ argument which defines the origins that are allowed to use the
 WebSocket. A WebSocket request from a disallowed origin will be
 responded to with a 400 response.
 
+The ``allow_origin`` origins should be the origin only (no path, query
+strings or fragments) i.e. ``https://quart.com`` not
+``https://quart.com/``.
+
 Simple examples
 ~~~~~~~~~~~~~~~
 
