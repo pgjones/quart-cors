@@ -280,7 +280,11 @@ def _apply_cors(
         response.access_control_allow_origin = origin
         response.access_control_allow_credentials = allow_credentials
         response.access_control_expose_headers = expose_headers
-        if method == "OPTIONS" and request_method in allow_methods or "*" in allow_methods:
+        if (
+            method == "OPTIONS"
+            and request_method
+            and (request_method in allow_methods or "*" in allow_methods)
+        ):
             if request_headers is None:
                 request_headers = HeaderSet()
             if "*" in allow_headers:

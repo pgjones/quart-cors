@@ -42,6 +42,20 @@ async def test_preflight_request(route_cors_app: Quart) -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("kind", ("no-header", "empty-header"))
+async def test_bad_preflight_request(route_cors_app: Quart, kind: str) -> None:
+    test_client = route_cors_app.test_client()
+    # Missing Access-Control-Request-Method header
+    headers = {"Origin": "https://quart.com"}
+    if kind == "empty-header":
+        headers["Access-Control-Request-Method"] = ""
+    response = await test_client.options("/", headers=headers)
+    assert response.access_control_allow_origin == "*"
+    assert response.access_control_allow_methods is None
+    assert response.access_control_max_age is None
+
+
+@pytest.mark.asyncio
 async def test_app_cors() -> None:
     app = Quart(__name__)
 
