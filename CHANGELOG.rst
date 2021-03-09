@@ -1,3 +1,12 @@
+0.4.0 2021-03-09
+----------------
+
+* Support Python 3.9.
+* Allow the allowed origin to be a regex pattern (or iterable
+  thereof).
+* Bugfix crash when sending OPTIONS with missing
+  Access-Control-Allow-Origin header.
+
 0.3.0 2020-02-09
 ----------------
 
