@@ -93,7 +93,10 @@ def route_cors(
             if provide_automatic_options and method == "OPTIONS":
                 response = await current_app.make_default_options_response()
             else:
-                response = cast(Response, await make_response(await func(*args, **kwargs)))
+                response = cast(
+                    Response,
+                    await make_response(await current_app.ensure_async(func)(*args, **kwargs)),
+                )
 
             allow_credentials = allow_credentials or _get_config_or_default(
                 "QUART_CORS_ALLOW_CREDENTIALS"
@@ -155,7 +158,7 @@ def websocket_cors(*, allow_origin: Optional[Iterable[OriginType]] = None) -> Ca
             # Will abort if origin is invalid
             await _apply_websocket_cors(allow_origin=allow_origin)
 
-            return await func(*args, **kwargs)
+            return await current_app.ensure_async(func)(*args, **kwargs)
 
         return wrapper
 
