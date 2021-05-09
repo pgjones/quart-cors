@@ -1,6 +1,6 @@
 from datetime import timedelta
 from functools import partial, wraps
-from typing import Any, Callable, Iterable, Optional, Pattern, Set, TypeVar, Union
+from typing import Any, Callable, cast, Iterable, Optional, Pattern, Set, TypeVar, Union
 
 from quart import abort, Blueprint, current_app, make_response, Quart, request, Response, websocket
 from werkzeug.datastructures import HeaderSet
@@ -93,7 +93,7 @@ def route_cors(
             if provide_automatic_options and method == "OPTIONS":
                 response = await current_app.make_default_options_response()
             else:
-                response = await make_response(await func(*args, **kwargs))
+                response = cast(Response, await make_response(await func(*args, **kwargs)))
 
             allow_credentials = allow_credentials or _get_config_or_default(
                 "QUART_CORS_ALLOW_CREDENTIALS"
