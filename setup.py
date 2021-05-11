@@ -17,7 +17,7 @@ INSTALL_REQUIRES = [
 
 setup(
     name='Quart-CORS',
-    version='0.4.0',
+    version='0.5.0',
     python_requires='>=3.7.0',
     description="A Quart extension to provide Cross Origin Resource Sharing, access control, support.",
     long_description=long_description,
