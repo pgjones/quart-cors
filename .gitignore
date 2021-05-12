@@ -8,5 +8,8 @@ TODO
 .mypy_cache/
 .hypothesis/
 docs/_build/
+docs/reference/source/
 .coverage
 .pytest_cache/
+dist/
+poetry.lock

@@ -14,4 +14,4 @@ py39:
   image: python:3.9
   script:
   - pip install tox
-  - tox -e format,mypy,py39,pep8,setuppy,manifest
+  - tox -e format,mypy,py39,pep8,package

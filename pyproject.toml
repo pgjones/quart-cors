@@ -1,5 +1,26 @@
-[build-system]
-requires = ["setuptools", "wheel"]
+[tool.poetry]
+name = "quart-cors"
+version = "0.5.0"
+description = "A Quart extension to provide Cross Origin Resource Sharing, access control, support"
+authors = ["pgjones <philip.graham.jones@googlemail.com>"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+include = ["src/quart_cors/py.typed"]
+license = "MIT"
+readme = "README.rst"
+repository = "https://gitlab.com/pgjones/quart-cors/"
 
 [tool.black]
 line-length = 100
@@ -16,3 +37,18 @@ multi_line_output = 3
 no_lines_before = "LOCALFOLDER"
 order_by_type = false
 reverse_relative = true
+
+[tool.poetry.dependencies]
+python = ">=3.7"
+quart = ">=0.15"
+
+[tool.poetry.dev-dependencies]
+tox = "*"
+
+[tool.pytest.ini_options]
+addopts = "--no-cov-on-fail --showlocals --strict"
+testpaths = ["tests"]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
