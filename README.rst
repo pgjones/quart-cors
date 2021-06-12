@@ -136,6 +136,9 @@ The ``allow_origin`` origins should be the origin only (no path, query
 strings or fragments) i.e. ``https://quart.com`` not
 ``https://quart.com/``.
 
+The ``cors_exempt`` decorator can be used in conjunction with ``cors``
+to exempt a websocket handler or view function from cors.
+
 Simple examples
 ~~~~~~~~~~~~~~~
 

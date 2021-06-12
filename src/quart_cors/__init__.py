@@ -18,6 +18,8 @@ DEFAULTS = {
     "QUART_CORS_MAX_AGE": None,
 }
 
+QUART_CORS_EXEMPT_ATTRIBUTE = "_quart_cors_exempt"
+
 
 def route_cors(
     *,
@@ -156,13 +158,32 @@ def websocket_cors(*, allow_origin: Optional[Iterable[OriginType]] = None) -> Ca
             nonlocal allow_origin
 
             # Will abort if origin is invalid
-            await _apply_websocket_cors(allow_origin=allow_origin)
+            _apply_websocket_cors(allow_origin=allow_origin)
 
             return await current_app.ensure_async(func)(*args, **kwargs)
 
         return wrapper
 
     return decorator
+
+
+def cors_exempt(func: Callable) -> Callable:
+    """A decorator to exempt a websocket handler or view function from CORS control.
+
+    This can be used in conjunction with the `cors` function to mark a
+    single websocket handler or view function as exempt from CORS
+    i.e. don't add CORS headers to responses and don't check the
+    origin.
+
+     .. code-block:: python
+
+        @app.websocket('/')
+        @cors_exempt
+        async def index():
+            ...
+    """
+    setattr(func, QUART_CORS_EXEMPT_ATTRIBUTE, True)
+    return func
 
 
 T = TypeVar("T", Blueprint, Quart)
@@ -178,6 +199,7 @@ def cors(
     expose_headers: Optional[Iterable[str]] = None,
     max_age: Optional[Union[timedelta, float, str]] = None,
 ) -> T:
+
     """Apply the CORS access control headers to all routes.
 
     This should be used on a Quart (app) instance or a Blueprint
@@ -219,8 +241,14 @@ def cors(
             max_age=max_age,
         )
     )
-    app_or_blueprint.before_websocket(partial(_apply_websocket_cors, allow_origin=allow_origin))
+    app_or_blueprint.before_websocket(partial(_before_websocket, allow_origin=allow_origin))
     return app_or_blueprint
+
+
+async def _before_websocket(*, allow_origin: Optional[Iterable[OriginType]] = None) -> None:
+    view_func = current_app.view_functions.get(websocket.endpoint)
+    if not getattr(view_func, QUART_CORS_EXEMPT_ATTRIBUTE, False):
+        return _apply_websocket_cors(allow_origin=allow_origin)
 
 
 async def _after_request(
@@ -242,19 +270,23 @@ async def _after_request(
 
     method = request.method
 
-    return _apply_cors(
-        request.origin,
-        request.access_control_request_headers,
-        request.access_control_request_method,
-        method,
-        response,
-        allow_credentials=allow_credentials,
-        allow_headers=allow_headers,
-        allow_methods=allow_methods,
-        allow_origin=allow_origin,
-        expose_headers=expose_headers,
-        max_age=max_age,
-    )
+    view_func = current_app.view_functions.get(request.endpoint)
+    if not getattr(view_func, QUART_CORS_EXEMPT_ATTRIBUTE, False):
+        return _apply_cors(
+            request.origin,
+            request.access_control_request_headers,
+            request.access_control_request_method,
+            method,
+            response,
+            allow_credentials=allow_credentials,
+            allow_headers=allow_headers,
+            allow_methods=allow_methods,
+            allow_origin=allow_origin,
+            expose_headers=expose_headers,
+            max_age=max_age,
+        )
+    else:
+        return response
 
 
 def _apply_cors(
@@ -305,7 +337,7 @@ def _apply_cors(
     return response
 
 
-async def _apply_websocket_cors(*, allow_origin: Optional[Iterable[OriginType]] = None) -> None:
+def _apply_websocket_cors(*, allow_origin: Optional[Iterable[OriginType]] = None) -> None:
     allow_origin = _sanitise_origin_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
     origin = _get_origin_if_valid(websocket.origin, allow_origin)
     if origin is None:
