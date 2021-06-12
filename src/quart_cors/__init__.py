@@ -199,7 +199,6 @@ def cors(
     expose_headers: Optional[Iterable[str]] = None,
     max_age: Optional[Union[timedelta, float, str]] = None,
 ) -> T:
-
     """Apply the CORS access control headers to all routes.
 
     This should be used on a Quart (app) instance or a Blueprint
