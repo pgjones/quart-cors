@@ -186,7 +186,7 @@ def cors_exempt(func: Callable) -> Callable:
     return func
 
 
-T = TypeVar("T", Blueprint, Quart)
+T = TypeVar("T", bound=Union[Blueprint, Quart])
 
 
 def cors(
