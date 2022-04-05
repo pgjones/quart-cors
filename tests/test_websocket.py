@@ -1,6 +1,6 @@
 import pytest
 from quart import Quart, websocket
-from quart.testing import WebsocketResponse
+from quart.testing import WebsocketResponseError
 
 from quart_cors import cors, cors_exempt
 
@@ -39,7 +39,7 @@ async def test_websocket_blocked(websocket_cors_app: Quart) -> None:
     try:
         async with test_client.websocket("/") as test_websocket:
             await test_websocket.send(b"a")
-    except WebsocketResponse as error:
+    except WebsocketResponseError as error:
         assert error.response.status_code == 400
 
 
