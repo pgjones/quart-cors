@@ -4,7 +4,7 @@ Quart-CORS
 |Build Status| |pypi| |python| |license|
 
 Quart-CORS is an extension for `Quart
-<https://gitlab.com/pgjones/quart>`_ to enable and control `Cross
+<https://github.com/pgjones/quart>`_ to enable and control `Cross
 Origin Resource Sharing <http://www.w3.org/TR/cors/>`_, CORS (also
 known as access control).
 
@@ -197,11 +197,11 @@ To allow a JSON POST request to an API route, from ``https://quart.com``,
 Contributing
 ------------
 
-Quart-CORS is developed on `GitLab
-<https://gitlab.com/pgjones/quart-cors>`_. You are very welcome to
-open `issues <https://gitlab.com/pgjones/quart-cors/issues>`_ or
+Quart-CORS is developed on `GitHub
+<https://github.com/pgjones/quart-cors>`_. You are very welcome to
+open `issues <https://github.com/pgjones/quart-cors/issues>`_ or
 propose `merge requests
-<https://gitlab.com/pgjones/quart-cors/merge_requests>`_.
+<https://github.com/pgjones/quart-cors/merge_requests>`_.
 
 Testing
 ~~~~~~~
@@ -219,11 +219,11 @@ Help
 ----
 
 This README is the best place to start, after that try opening an
-`issue <https://gitlab.com/pgjones/quart-cors/issues>`_.
+`issue <https://github.com/pgjones/quart-cors/issues>`_.
 
 
-.. |Build Status| image:: https://gitlab.com/pgjones/quart-cors/badges/main/pipeline.svg
-   :target: https://gitlab.com/pgjones/quart-cors/commits/main
+.. |Build Status| image:: https://github.com/pgjones/quart-cors/actions/workflows/ci.yml/badge.svg
+   :target: https://github.com/pgjones/quart-cors/commits/main
 
 .. |pypi| image:: https://img.shields.io/pypi/v/quart-cors.svg
    :target: https://pypi.python.org/pypi/Quart-CORS/
@@ -232,4 +232,4 @@ This README is the best place to start, after that try opening an
    :target: https://pypi.python.org/pypi/Quart-CORS/
 
 .. |license| image:: https://img.shields.io/badge/license-MIT-blue.svg
-   :target: https://gitlab.com/pgjones/quart-cors/blob/main/LICENSE
+   :target: https://github.com/pgjones/quart-cors/blob/main/LICENSE

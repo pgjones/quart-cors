@@ -21,7 +21,7 @@ classifiers = [
 include = ["src/quart_cors/py.typed"]
 license = "MIT"
 readme = "README.rst"
-repository = "https://gitlab.com/pgjones/quart-cors/"
+repository = "https://github.com/pgjones/quart-cors/"
 
 [tool.black]
 line-length = 100
