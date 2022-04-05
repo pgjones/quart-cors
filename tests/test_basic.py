@@ -21,14 +21,12 @@ def _route_cors_app() -> Quart:
     return app
 
 
-@pytest.mark.asyncio
 async def test_simple_cross_origin_request(route_cors_app: Quart) -> None:
     test_client = route_cors_app.test_client()
     response = await test_client.get("/", headers={"Origin": "https://quart.com"})
     assert response.access_control_allow_origin == "*"
 
 
-@pytest.mark.asyncio
 async def test_preflight_request(route_cors_app: Quart) -> None:
     test_client = route_cors_app.test_client()
     response = await test_client.options(
@@ -41,7 +39,6 @@ async def test_preflight_request(route_cors_app: Quart) -> None:
     assert response.access_control_max_age == 5
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("kind", ("no-header", "empty-header"))
 async def test_bad_preflight_request(route_cors_app: Quart, kind: str) -> None:
     test_client = route_cors_app.test_client()
@@ -55,7 +52,6 @@ async def test_bad_preflight_request(route_cors_app: Quart, kind: str) -> None:
     assert response.access_control_max_age is None
 
 
-@pytest.mark.asyncio
 async def test_app_cors() -> None:
     app = Quart(__name__)
 
@@ -70,7 +66,6 @@ async def test_app_cors() -> None:
     assert response.access_control_allow_origin == "*"
 
 
-@pytest.mark.asyncio
 async def test_blueprint_cors() -> None:
     app = Quart(__name__)
 
@@ -89,7 +84,6 @@ async def test_blueprint_cors() -> None:
     assert response.access_control_allow_origin == "*"
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "allowed_origin, expected",
     [

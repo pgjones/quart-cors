@@ -37,7 +37,6 @@ def _app() -> Quart:
     return app
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "origin, path",
     [
@@ -56,7 +55,6 @@ async def test_match(app: Quart, origin: str, path: str) -> None:
     assert response.access_control_allow_methods == HeaderSet(["GET", "POST"])
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "origin, path",
     [

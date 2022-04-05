@@ -23,7 +23,6 @@ def _websocket_cors_app() -> Quart:
     return app
 
 
-@pytest.mark.asyncio
 async def test_websocket_allowed(websocket_cors_app: Quart) -> None:
     test_client = websocket_cors_app.test_client()
     async with test_client.websocket(
@@ -33,7 +32,6 @@ async def test_websocket_allowed(websocket_cors_app: Quart) -> None:
     assert data == b"a"  # type: ignore
 
 
-@pytest.mark.asyncio
 async def test_websocket_blocked(websocket_cors_app: Quart) -> None:
     test_client = websocket_cors_app.test_client()
     try:
@@ -43,7 +41,6 @@ async def test_websocket_blocked(websocket_cors_app: Quart) -> None:
         assert error.response.status_code == 400
 
 
-@pytest.mark.asyncio
 async def test_websocket_exempt(websocket_cors_app: Quart) -> None:
     test_client = websocket_cors_app.test_client()
     async with test_client.websocket("/exempt") as test_websocket:

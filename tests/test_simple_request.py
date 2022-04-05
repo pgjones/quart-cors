@@ -21,14 +21,12 @@ def _app() -> Quart:
 # follow the logic given.
 
 
-@pytest.mark.asyncio
 async def test_no_origin(app: Quart) -> None:
     test_client = app.test_client()
     response = await test_client.get("/")
     assert "Access-Control-Allow-Origin" not in response.headers
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("origin", ["http://notquart.com", "http://Quart.com"])
 async def test_origin_doesnt_match(app: Quart, origin: str) -> None:
     test_client = app.test_client()
@@ -37,7 +35,6 @@ async def test_origin_doesnt_match(app: Quart, origin: str) -> None:
     assert "Access-Control-Allow-Origin" not in response.headers
 
 
-@pytest.mark.asyncio
 async def test_credentials_and_wildcard(app: Quart) -> None:
     test_client = app.test_client()
     app.config["QUART_CORS_ALLOW_CREDENTIALS"] = True
@@ -45,7 +42,6 @@ async def test_credentials_and_wildcard(app: Quart) -> None:
     assert response.status_code == 500
 
 
-@pytest.mark.asyncio
 async def test_credentials(app: Quart) -> None:
     test_client = app.test_client()
     app.config["QUART_CORS_ALLOW_ORIGIN"] = ["http://quart.com"]
@@ -56,7 +52,6 @@ async def test_credentials(app: Quart) -> None:
     assert response.access_control_allow_credentials
 
 
-@pytest.mark.asyncio
 async def test_expose_headers(app: Quart) -> None:
     test_client = app.test_client()
     app.config["QUART_CORS_EXPOSE_HEADERS"] = ["X-Special", "X-Other"]

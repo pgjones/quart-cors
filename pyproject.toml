@@ -64,6 +64,7 @@ tox = "*"
 
 [tool.pytest.ini_options]
 addopts = "--no-cov-on-fail --showlocals --strict-markers"
+asyncio_mode = "auto"
 testpaths = ["tests"]
 
 [build-system]
