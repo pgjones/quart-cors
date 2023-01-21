@@ -59,6 +59,7 @@ warn_unused_ignores = true
 [tool.poetry.dependencies]
 python = ">=3.7"
 quart = ">=0.15"
+typing_extensions = { version = "*", python = "<3.10" }
 
 [tool.poetry.dev-dependencies]
 tox = "*"

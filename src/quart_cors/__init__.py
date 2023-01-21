@@ -1,9 +1,25 @@
 from datetime import timedelta
 from functools import partial, wraps
-from typing import Any, Callable, cast, Iterable, Optional, Pattern, Set, TypeVar, Union
+from typing import Any, Awaitable, Callable, cast, Iterable, Optional, Pattern, Set, TypeVar, Union
 
-from quart import abort, Blueprint, current_app, make_response, Quart, request, Response, websocket
+from quart import (
+    abort,
+    Blueprint,
+    current_app,
+    make_response,
+    Quart,
+    request,
+    Response,
+    ResponseReturnValue,
+    websocket,
+)
+from quart.typing import RouteCallable, WebsocketCallable
 from werkzeug.datastructures import HeaderSet
+
+try:
+    from typing import ParamSpec
+except ImportError:
+    from typing_extensions import ParamSpec  # type: ignore
 
 __all__ = ("cors", "route_cors", "websocket_cors")
 
@@ -20,6 +36,8 @@ DEFAULTS = {
 
 QUART_CORS_EXEMPT_ATTRIBUTE = "_quart_cors_exempt"
 
+P = ParamSpec("P")
+
 
 def route_cors(
     *,
@@ -30,7 +48,7 @@ def route_cors(
     expose_headers: Optional[Iterable[str]] = None,
     max_age: Optional[Union[timedelta, float, str]] = None,
     provide_automatic_options: bool = True,
-) -> Callable:
+) -> Callable[[Callable[P, ResponseReturnValue]], Callable[P, Awaitable[Response]]]:
     """A decorator to add the CORS access control headers.
 
     This should be used to wrap a route handler (or view function) to
@@ -79,14 +97,14 @@ def route_cors(
 
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[P, ResponseReturnValue]) -> Callable[P, Awaitable[Response]]:
         if provide_automatic_options:
             func.required_methods = getattr(func, "required_methods", set())  # type: ignore
             func.required_methods.add("OPTIONS")  # type: ignore
             func.provide_automatic_options = False  # type: ignore
 
         @wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> Response:
             nonlocal allow_credentials, allow_headers, allow_methods, allow_origin, expose_headers
             nonlocal max_age
 
@@ -128,7 +146,12 @@ def route_cors(
     return decorator
 
 
-def websocket_cors(*, allow_origin: Optional[Iterable[OriginType]] = None) -> Callable:
+V = TypeVar("V", bound=Optional[ResponseReturnValue])
+
+
+def websocket_cors(
+    *, allow_origin: Optional[Iterable[OriginType]] = None
+) -> Callable[[Callable[P, Union[V, Awaitable[V]]]], Callable[P, Awaitable[V]]]:
     """A decorator to control CORS websocket requests.
 
     This should be used to wrap a websocket handler (or view function)
@@ -152,9 +175,9 @@ def websocket_cors(*, allow_origin: Optional[Iterable[OriginType]] = None) -> Ca
 
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[P, Union[V, Awaitable[V]]]) -> Callable[P, Awaitable[V]]:
         @wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> V:
             nonlocal allow_origin
 
             # Will abort if origin is invalid
@@ -167,7 +190,10 @@ def websocket_cors(*, allow_origin: Optional[Iterable[OriginType]] = None) -> Ca
     return decorator
 
 
-def cors_exempt(func: Callable) -> Callable:
+U = TypeVar("U", bound=Union[RouteCallable, WebsocketCallable])
+
+
+def cors_exempt(func: U) -> U:
     """A decorator to exempt a websocket handler or view function from CORS control.
 
     This can be used in conjunction with the `cors` function to mark a
