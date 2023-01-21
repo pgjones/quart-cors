@@ -1,3 +1,5 @@
+from typing import List
+
 import pytest
 from quart import Quart
 from werkzeug.datastructures import HeaderSet
@@ -55,16 +57,25 @@ async def test_request_method_match(app: Quart) -> None:
     assert response.access_control_allow_methods == HeaderSet(["GET", "POST"])
 
 
-async def test_request_headers(app: Quart) -> None:
+@pytest.mark.parametrize(
+    "config_headers, request_headers, expected",
+    [
+        (["X-Match", "X-Other"], "X-Match, X-No-Match", ["X-Match"]),
+        (["X-match", "X-Other"], "X-Match, X-No-Match", ["x-match"]),
+    ],
+)
+async def test_request_headers(
+    app: Quart, config_headers: List[str], request_headers: str, expected: List[str]
+) -> None:
     test_client = app.test_client()
-    app.config["QUART_CORS_ALLOW_HEADERS"] = ["X-Match", "X-Other"]
+    app.config["QUART_CORS_ALLOW_HEADERS"] = config_headers
     response = await test_client.options(
         "/",
         headers={
             "Origin": "http://quart.com",
             "Access-Control-Request-Method": "POST",
-            "Access-Control-Request-Headers": "X-Match, X-No-Match",
+            "Access-Control-Request-Headers": request_headers,
         },
     )
     assert response.access_control_allow_origin == "*"
-    assert response.access_control_allow_headers == HeaderSet(["X-Match"])
+    assert response.access_control_allow_headers == HeaderSet(expected)

@@ -351,7 +351,7 @@ def _apply_cors(
                 response.access_control_allow_headers = request_headers
             else:
                 response.access_control_allow_headers = HeaderSet(
-                    set(allow_headers).intersection(set(request_headers))
+                    allow_headers.as_set().intersection(request_headers.as_set())
                 )
             response.access_control_allow_methods = allow_methods
             if max_age is not None:
