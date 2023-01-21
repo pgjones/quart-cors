@@ -1,3 +1,12 @@
+0.6.0 2023-01-21
+----------------
+
+* Add the ability to exempt routes/websockets from cors.
+* Ensure header name comparison is based on lowercased header names.
+* Much improve the typing, leading to more accurate type checking.
+* Officially support Python 3.10, and Python 3.11.
+* Switch to GitHub rather than GitLab.
+
 0.5.0 2021-05-11
 ----------------
 
