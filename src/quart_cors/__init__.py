@@ -346,8 +346,8 @@ def _apply_cors(
             response.access_control_allow_methods = allow_methods
             if max_age is not None:
                 response.access_control_max_age = max_age
-        if "*" not in origin:
-            response.vary.add("Origin")
+    if origin is None or "*" not in origin:
+        response.vary.add("Origin")
     setattr(response, "_QUART_CORS_APPLIED", True)
     return response
 
