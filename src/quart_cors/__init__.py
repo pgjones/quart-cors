@@ -85,16 +85,6 @@ def route_cors(
             response created by Quart will be overwriten by one
             created by Quart-CORS.
 
-        send_wildcard: If set the allow origin response header is
-            replaced with a wildcard rather than the actual
-            origin. Requires the origins argument to also be '*'.
-        vary_header: If set the Vary header will include Origin,
-            allowing caching services to understand when to cache the
-        always_send: Always send the access control headers on
-            response, including when the request is missing an origin
-            header.
-            headers.
-
     """
 
     def decorator(func: Callable[P, ResponseReturnValue]) -> Callable[P, Awaitable[Response]]:
