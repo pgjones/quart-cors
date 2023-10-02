@@ -68,6 +68,17 @@ Access-Control-Max-Age           Maximum age to cache the CORS headers for the r
 Quart-CORS uses the same naming (without the Access-Control prefix)
 for it's arguments and settings when they relate to the same meaning.
 
+
+Installation
+-----
+
+Quart-CORS can be installed using pip or your favorite python package manager:
+
+.. code-block:: console
+
+    pip install quart-cors
+
+
 Usage
 -----
 
@@ -76,6 +87,8 @@ application, simply apply the ``cors`` function to the application, or
 to a specific blueprint,
 
 .. code-block:: python
+
+    from quart_cors import cors
 
     app = Quart(__name__)
     app = cors(app, **settings)
@@ -88,6 +101,8 @@ the ``route_cors`` function to a route, or the ``websocket_cors``
 function to a WebSocket,
 
 .. code-block:: python
+
+    from quart_cors import route_cors
 
     @app.route('/')
     @route_cors(**settings)
