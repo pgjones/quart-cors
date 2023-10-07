@@ -70,7 +70,7 @@ for it's arguments and settings when they relate to the same meaning.
 
 
 Installation
------
+------------
 
 Quart-CORS can be installed using pip or your favorite python package manager:
 
