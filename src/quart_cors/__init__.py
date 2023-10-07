@@ -48,7 +48,10 @@ def route_cors(
     expose_headers: Optional[Iterable[str]] = None,
     max_age: Optional[Union[timedelta, float, str]] = None,
     provide_automatic_options: bool = True,
-) -> Callable[[Callable[P, ResponseReturnValue]], Callable[P, Awaitable[Response]]]:
+) -> Callable[
+    [Union[Callable[P, ResponseReturnValue], Callable[P, Awaitable[ResponseReturnValue]]]],
+    Callable[P, Awaitable[Response]],
+]:
     """A decorator to add the CORS access control headers.
 
     This should be used to wrap a route handler (or view function) to
@@ -87,7 +90,9 @@ def route_cors(
 
     """
 
-    def decorator(func: Callable[P, ResponseReturnValue]) -> Callable[P, Awaitable[Response]]:
+    def decorator(
+        func: Union[Callable[P, ResponseReturnValue], Callable[P, Awaitable[ResponseReturnValue]]]
+    ) -> Callable[P, Awaitable[Response]]:
         if provide_automatic_options:
             func.required_methods = getattr(func, "required_methods", set())  # type: ignore
             func.required_methods.add("OPTIONS")  # type: ignore
