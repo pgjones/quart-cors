@@ -85,6 +85,8 @@ def route_cors(
         provide_automatic_options: If set the automatic OPTIONS
             response created by Quart will be overwriten by one
             created by Quart-CORS.
+        send_wildcard: If set to False, Access-Control-Allow-Origin
+            will echo the request's Origin header instead of returning '*'
 
     """
 
