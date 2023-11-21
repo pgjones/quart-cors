@@ -48,10 +48,8 @@ def route_cors(
     expose_headers: Optional[Iterable[str]] = None,
     max_age: Optional[Union[timedelta, float, str]] = None,
     provide_automatic_options: bool = True,
-) -> Callable[
-    [Union[Callable[P, ResponseReturnValue], Callable[P, Awaitable[ResponseReturnValue]]]],
-    Callable[P, Awaitable[Response]],
-]:
+    send_wildcard: bool = True
+) -> Callable[[Callable[P, ResponseReturnValue]], Callable[P, Awaitable[Response]]]:
     """A decorator to add the CORS access control headers.
 
     This should be used to wrap a route handler (or view function) to
@@ -87,12 +85,12 @@ def route_cors(
         provide_automatic_options: If set the automatic OPTIONS
             response created by Quart will be overwriten by one
             created by Quart-CORS.
+        send_wildcard: If set to False, Access-Control-Allow-Origin
+            will echo the request's Origin header instead of returning '*'
 
     """
 
-    def decorator(
-        func: Union[Callable[P, ResponseReturnValue], Callable[P, Awaitable[ResponseReturnValue]]]
-    ) -> Callable[P, Awaitable[Response]]:
+    def decorator(func: Callable[P, ResponseReturnValue]) -> Callable[P, Awaitable[Response]]:
         if provide_automatic_options:
             func.required_methods = getattr(func, "required_methods", set())  # type: ignore
             func.required_methods.add("OPTIONS")  # type: ignore
@@ -101,7 +99,7 @@ def route_cors(
         @wraps(func)
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> Response:
             nonlocal allow_credentials, allow_headers, allow_methods, allow_origin, expose_headers
-            nonlocal max_age
+            nonlocal max_age, send_wildcard
 
             method = request.method
 
@@ -120,6 +118,10 @@ def route_cors(
             allow_methods = _sanitise_header_set(allow_methods, "QUART_CORS_ALLOW_METHODS")
             allow_origin = _sanitise_origin_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
             expose_headers = _sanitise_header_set(expose_headers, "QUART_CORS_EXPOSE_HEADERS")
+
+            if send_wildcard == False and allow_origin == {'*'}:
+                allow_origin = [ request.origin ]
+
             max_age = _sanitise_max_age(max_age, "QUART_CORS_MAX_AGE")
             response = _apply_cors(
                 request.origin,
