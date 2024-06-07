@@ -178,7 +178,7 @@ def websocket_cors(
             # Will abort if origin is invalid
             _apply_websocket_cors(allow_origin=allow_origin)
 
-            return await current_app.ensure_async(func)(*args, **kwargs)
+            return await current_app.ensure_async(func)(*args, **kwargs)  # type: ignore
 
         return wrapper
 
