@@ -44,7 +44,7 @@ def route_cors(
     allow_credentials: Optional[bool] = None,
     allow_headers: Optional[Iterable[str]] = None,
     allow_methods: Optional[Iterable[str]] = None,
-    allow_origin: Optional[Iterable[OriginType]] = None,
+    allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None,
     expose_headers: Optional[Iterable[str]] = None,
     max_age: Optional[Union[timedelta, float, str]] = None,
     provide_automatic_options: bool = True,
@@ -145,7 +145,7 @@ V = TypeVar("V", bound=Optional[ResponseReturnValue])
 
 
 def websocket_cors(
-    *, allow_origin: Optional[Iterable[OriginType]] = None
+    *, allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None
 ) -> Callable[[Callable[P, Union[V, Awaitable[V]]]], Callable[P, Awaitable[V]]]:
     """A decorator to control CORS websocket requests.
 
@@ -216,7 +216,7 @@ def cors(
     allow_credentials: Optional[bool] = None,
     allow_headers: Optional[Iterable[str]] = None,
     allow_methods: Optional[Iterable[str]] = None,
-    allow_origin: Optional[Iterable[OriginType]] = None,
+    allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None,
     expose_headers: Optional[Iterable[str]] = None,
     max_age: Optional[Union[timedelta, float, str]] = None,
 ) -> T:
@@ -265,7 +265,9 @@ def cors(
     return app_or_blueprint
 
 
-async def _before_websocket(*, allow_origin: Optional[Iterable[OriginType]] = None) -> None:
+async def _before_websocket(
+    *, allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None
+) -> None:
     view_func = current_app.view_functions.get(websocket.endpoint)
     if not getattr(view_func, QUART_CORS_EXEMPT_ATTRIBUTE, False):
         return _apply_websocket_cors(allow_origin=allow_origin)
@@ -277,7 +279,7 @@ async def _after_request(
     allow_credentials: Optional[bool] = None,
     allow_headers: Optional[Iterable[str]] = None,
     allow_methods: Optional[Iterable[str]] = None,
-    allow_origin: Optional[Iterable[OriginType]] = None,
+    allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None,
     expose_headers: Optional[Iterable[str]] = None,
     max_age: Optional[Union[timedelta, float, str]] = None,
 ) -> Optional[Response]:
@@ -357,7 +359,9 @@ def _apply_cors(
     return response
 
 
-def _apply_websocket_cors(*, allow_origin: Optional[Iterable[OriginType]] = None) -> None:
+def _apply_websocket_cors(
+    *, allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None
+) -> None:
     allow_origin = _sanitise_origin_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
     origin = _get_origin_if_valid(websocket.origin, allow_origin)
     if origin is None:
