@@ -152,7 +152,8 @@ strings or fragments) i.e. ``https://quart.com`` not
 ``https://quart.com/``.
 
 The ``cors_exempt`` decorator can be used in conjunction with ``cors``
-to exempt a websocket handler or view function from cors.
+to exempt a websocket handler or view function from cors. You can find
+a usage example in "Simple examples" section down below.
 
 Simple examples
 ~~~~~~~~~~~~~~~
@@ -192,6 +193,15 @@ the domain itself) of ``quart.com``,
 
     @app.websocket('/')
     @websocket_cors(allow_origin=re.compile(r"https:\/\/.*\.quart\.com"))
+    async def handler():
+        ...
+
+To exempt a WebSocket handler from CORS,
+
+.. code-block:: python
+
+    @app.websocket('/')
+    @cors_exempt
     async def handler():
         ...
 
