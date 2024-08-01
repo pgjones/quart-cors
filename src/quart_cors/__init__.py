@@ -21,7 +21,7 @@ try:
 except ImportError:
     from typing_extensions import ParamSpec  # type: ignore
 
-__all__ = ("cors", "route_cors", "websocket_cors")
+__all__ = ("cors", "route_cors", "websocket_cors", "cors_exempt")
 
 OriginType = Union[Pattern, str]
 
