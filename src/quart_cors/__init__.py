@@ -32,6 +32,7 @@ DEFAULTS = {
     "QUART_CORS_ALLOW_ORIGIN": ["*"],
     "QUART_CORS_EXPOSE_HEADERS": [""],
     "QUART_CORS_MAX_AGE": None,
+    "QUART_CORS_SEND_ORIGIN_WILDCARD": True,
 }
 
 QUART_CORS_EXEMPT_ATTRIBUTE = "_quart_cors_exempt"
@@ -47,6 +48,7 @@ def route_cors(
     allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None,
     expose_headers: Optional[Iterable[str]] = None,
     max_age: Optional[Union[timedelta, float, str]] = None,
+    send_origin_wildcard: Optional[bool] = None,
     provide_automatic_options: bool = True,
 ) -> Callable[
     [Union[Callable[P, ResponseReturnValue], Callable[P, Awaitable[ResponseReturnValue]]]],
@@ -84,6 +86,8 @@ def route_cors(
             to expose to the client of a cross origin request.
         max_age: The maximum time the response can be cached by the
             client.
+        send_origin_wildcard: Send wildcard, "*", as the allow origin
+            were appropriate (or echo the request origin).
         provide_automatic_options: If set the automatic OPTIONS
             response created by Quart will be overwriten by one
             created by Quart-CORS.
@@ -101,7 +105,7 @@ def route_cors(
         @wraps(func)
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> Response:
             nonlocal allow_credentials, allow_headers, allow_methods, allow_origin, expose_headers
-            nonlocal max_age
+            nonlocal max_age, send_origin_wildcard
 
             method = request.method
 
@@ -121,6 +125,9 @@ def route_cors(
             allow_origin = _sanitise_origin_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
             expose_headers = _sanitise_header_set(expose_headers, "QUART_CORS_EXPOSE_HEADERS")
             max_age = _sanitise_max_age(max_age, "QUART_CORS_MAX_AGE")
+            send_origin_wildcard = send_origin_wildcard or _get_config_or_default(
+                "QUART_CORS_SEND_ORIGIN_WILDCARD"
+            )
             response = _apply_cors(
                 request.origin,
                 request.access_control_request_headers,
@@ -133,6 +140,7 @@ def route_cors(
                 allow_origin=allow_origin,
                 expose_headers=expose_headers,
                 max_age=max_age,
+                send_origin_wildcard=send_origin_wildcard,
             )
             return response
 
@@ -145,7 +153,9 @@ V = TypeVar("V", bound=Optional[ResponseReturnValue])
 
 
 def websocket_cors(
-    *, allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None
+    *,
+    allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None,
+    send_origin_wildcard: Optional[bool] = None,
 ) -> Callable[[Callable[P, Union[V, Awaitable[V]]]], Callable[P, Awaitable[V]]]:
     """A decorator to control CORS websocket requests.
 
@@ -167,16 +177,20 @@ def websocket_cors(
             strings, or a single re.compiled regex or string, or the
             wildward string, `*`. Note the full domain including scheme
             is required.
+        send_origin_wildcard: Send wildcard, "*", as the allow origin
+            were appropriate (or echo the request origin).
 
     """
 
     def decorator(func: Callable[P, Union[V, Awaitable[V]]]) -> Callable[P, Awaitable[V]]:
         @wraps(func)
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> V:
-            nonlocal allow_origin
+            nonlocal allow_origin, send_origin_wildcard
 
             # Will abort if origin is invalid
-            _apply_websocket_cors(allow_origin=allow_origin)
+            _apply_websocket_cors(
+                allow_origin=allow_origin, send_origin_wildcard=send_origin_wildcard
+            )
 
             return await current_app.ensure_async(func)(*args, **kwargs)  # type: ignore
 
@@ -219,6 +233,7 @@ def cors(
     allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None,
     expose_headers: Optional[Iterable[str]] = None,
     max_age: Optional[Union[timedelta, float, str]] = None,
+    send_origin_wildcard: Optional[bool] = None,
 ) -> T:
     """Apply the CORS access control headers to all routes.
 
@@ -248,6 +263,8 @@ def cors(
             to expose to the client of a cross origin request.
         max_age: The maximum time the response can be cached by the
             client.
+        send_origin_wildcard: Send wildcard, "*", as the allow origin
+            were appropriate (or echo the request origin).
 
     """
     app_or_blueprint.after_request(
@@ -259,18 +276,27 @@ def cors(
             allow_origin=allow_origin,
             expose_headers=expose_headers,
             max_age=max_age,
+            send_origin_wildcard=send_origin_wildcard,
         )
     )
-    app_or_blueprint.before_websocket(partial(_before_websocket, allow_origin=allow_origin))
+    app_or_blueprint.before_websocket(
+        partial(
+            _before_websocket, allow_origin=allow_origin, send_origin_wildcard=send_origin_wildcard
+        )
+    )
     return app_or_blueprint
 
 
 async def _before_websocket(
-    *, allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None
+    *,
+    allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None,
+    send_origin_wildcard: Optional[bool] = None,
 ) -> None:
     view_func = current_app.view_functions.get(websocket.endpoint)
     if not getattr(view_func, QUART_CORS_EXEMPT_ATTRIBUTE, False):
-        return _apply_websocket_cors(allow_origin=allow_origin)
+        return _apply_websocket_cors(
+            allow_origin=allow_origin, send_origin_wildcard=send_origin_wildcard
+        )
 
 
 async def _after_request(
@@ -282,6 +308,7 @@ async def _after_request(
     allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None,
     expose_headers: Optional[Iterable[str]] = None,
     max_age: Optional[Union[timedelta, float, str]] = None,
+    send_origin_wildcard: Optional[bool] = None,
 ) -> Optional[Response]:
     allow_credentials = allow_credentials or _get_config_or_default("QUART_CORS_ALLOW_CREDENTIALS")
     allow_headers = _sanitise_header_set(allow_headers, "QUART_CORS_ALLOW_HEADERS")
@@ -289,6 +316,9 @@ async def _after_request(
     allow_origin = _sanitise_origin_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
     expose_headers = _sanitise_header_set(expose_headers, "QUART_CORS_EXPOSE_HEADERS")
     max_age = _sanitise_max_age(max_age, "QUART_CORS_MAX_AGE")
+    send_origin_wildcard = send_origin_wildcard or _get_config_or_default(
+        "QUART_CORS_SEND_ORIGIN_WILDCARD"
+    )
 
     method = request.method
 
@@ -306,6 +336,7 @@ async def _after_request(
             allow_origin=allow_origin,
             expose_headers=expose_headers,
             max_age=max_age,
+            send_origin_wildcard=send_origin_wildcard,
         )
     else:
         return response
@@ -324,6 +355,7 @@ def _apply_cors(
     allow_origin: Set[OriginType],
     expose_headers: HeaderSet,
     max_age: Optional[int],
+    send_origin_wildcard: bool,
 ) -> Response:
     # Logic follows https://www.w3.org/TR/cors/
     if "*" in allow_origin and allow_credentials:
@@ -332,7 +364,7 @@ def _apply_cors(
     if getattr(response, "_QUART_CORS_APPLIED", False):
         return response
 
-    origin = _get_origin_if_valid(request_origin, allow_origin)
+    origin = _get_origin_if_valid(request_origin, allow_origin, send_origin_wildcard)
     if origin is not None:
         response.access_control_allow_origin = origin
         response.access_control_allow_credentials = allow_credentials
@@ -360,10 +392,15 @@ def _apply_cors(
 
 
 def _apply_websocket_cors(
-    *, allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None
+    *,
+    allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None,
+    send_origin_wildcard: Optional[bool] = None,
 ) -> None:
     allow_origin = _sanitise_origin_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
-    origin = _get_origin_if_valid(websocket.origin, allow_origin)
+    send_origin_wildcard = send_origin_wildcard or _get_config_or_default(
+        "QUART_CORS_SEND_ORIGIN_WILDCARD"
+    )
+    origin = _get_origin_if_valid(websocket.origin, allow_origin, send_origin_wildcard)
     if origin is None:
         abort(400)
 
@@ -400,13 +437,18 @@ def _get_config_or_default(config_key: str) -> Any:
     return current_app.config.get(config_key, DEFAULTS[config_key])
 
 
-def _get_origin_if_valid(origin: Optional[str], allow_origin: Set[OriginType]) -> Optional[str]:
+def _get_origin_if_valid(
+    origin: Optional[str], allow_origin: Set[OriginType], send_wildcard: bool
+) -> Optional[str]:
     if origin is None or origin == "":
         return None
 
     for allowed in allow_origin:
         if allowed == "*":
-            return "*"
+            if send_wildcard:
+                return "*"
+            else:
+                return origin
         if isinstance(allowed, Pattern) and allowed.match(origin):
             return origin
         elif origin == allowed:

@@ -116,36 +116,41 @@ function to a WebSocket,
 
 The ``settings`` are these arguments,
 
-================= ====================================================
-Argument          type
------------------ ----------------------------------------------------
-allow_origin      Union[Set[Union[Pattern, str]], Union[Pattern, str]]
-allow_credentials bool
-allow_methods     Union[Set[str], str]
-allow_headers     Union[Set[str], str]
-expose_headers    Union[Set[str], str]
-max_age           Union[int, flot, timedelta]
-================= ====================================================
+==================== ====================================================
+Argument             type
+-------------------- ----------------------------------------------------
+allow_origin         Union[Set[Union[Pattern, str]], Union[Pattern, str]]
+allow_credentials    bool
+allow_methods        Union[Set[str], str]
+allow_headers        Union[Set[str], str]
+expose_headers       Union[Set[str], str]
+max_age              Union[int, flot, timedelta]
+send_origin_wildcard bool
+==================== ====================================================
 
-which correspond to the CORS headers noted above. Note that all
-settings are optional and defaults can be specified in the application
-configuration,
+which correspond to the CORS headers noted above (bar
+``send_origin_wildcard``). The ``send_origin_wildcard`` argument
+specifies whether to send a wildcard or echo the request origin in the
+allow origin header. Note that all settings are optional and defaults
+can be specified in the application configuration,
 
-============================ ========================
-Configuration key            type
----------------------------- ------------------------
-QUART_CORS_ALLOW_ORIGIN      Set[Union[Pattern, str]]
-QUART_CORS_ALLOW_CREDENTIALS bool
-QUART_CORS_ALLOW_METHODS     Set[str]
-QUART_CORS_ALLOW_HEADERS     Set[str]
-QUART_CORS_EXPOSE_HEADERS    Set[str]
-QUART_CORS_MAX_AGE           float
-============================ ========================
+=============================== ========================
+Configuration key               type
+------------------------------- ------------------------
+QUART_CORS_ALLOW_ORIGIN         Set[Union[Pattern, str]]
+QUART_CORS_ALLOW_CREDENTIALS    bool
+QUART_CORS_ALLOW_METHODS        Set[str]
+QUART_CORS_ALLOW_HEADERS        Set[str]
+QUART_CORS_EXPOSE_HEADERS       Set[str]
+QUART_CORS_MAX_AGE              float
+QUART_CORS_SEND_ORIGIN_WILDCARD bool
+=============================== ========================
 
-The ``websocket_cors`` decorator only takes an ``allow_origin``
-argument which defines the origins that are allowed to use the
-WebSocket. A WebSocket request from a disallowed origin will be
-responded to with a 400 response.
+The ``websocket_cors`` decorator only takes ``allow_origin`` and
+``send_origin_wildcard`` arguments which defines the origins that are
+allowed to use the WebSocket and whether a wildcard should be sent in
+the allow origin header. A WebSocket request from a disallowed origin
+will be responded to with a 400 response.
 
 The ``allow_origin`` origins should be the origin only (no path, query
 strings or fragments) i.e. ``https://quart.com`` not
