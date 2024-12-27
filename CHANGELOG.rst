@@ -1,3 +1,17 @@
+0.8.0 2024-12-27
+----------------
+
+* Add the ability to control origin wildcard sending as a wildcard
+  seen in the allow origin header can be considered dangerous by some.
+* Add ``cors_exempt`` to top level package import.
+* Improve the typing througout.
+* Support Python 3.13, and 3.12 drop Python 3.8 and 3.7.
+
+0.7.0 2023-09-23
+----------------
+
+* Send Vary: Origin for non-CORS requests.
+
 0.6.0 2023-01-21
 ----------------
 

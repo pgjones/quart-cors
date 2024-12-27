@@ -1,6 +1,6 @@
 [project]
 name = "quart-cors"
-version = "0.7.0"
+version = "0.8.0"
 description = "A Quart extension to provide Cross Origin Resource Sharing, access control, support"
 authors = [
     {name = "pgjones", email = "philip.graham.jones@googlemail.com"},
