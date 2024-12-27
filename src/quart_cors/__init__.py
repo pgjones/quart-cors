@@ -19,7 +19,7 @@ from werkzeug.datastructures import HeaderSet
 try:
     from typing import ParamSpec
 except ImportError:
-    from typing_extensions import ParamSpec  # type: ignore
+    from typing_extensions import ParamSpec
 
 __all__ = ("cors", "route_cors", "websocket_cors", "cors_exempt")
 
