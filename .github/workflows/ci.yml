@@ -32,4 +32,9 @@ jobs:
         with:
           environment: ${{ matrix.tox }}
 
+  zizmor:
+    name: Zizmor
+    runs-on: ubuntu-latest
+
+    steps:
       - uses: pgjones/actions/zizmor@v1
