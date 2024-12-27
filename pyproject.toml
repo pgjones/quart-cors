@@ -1,8 +1,10 @@
-[tool.poetry]
+[project]
 name = "quart-cors"
 version = "0.7.0"
 description = "A Quart extension to provide Cross Origin Resource Sharing, access control, support"
-authors = ["pgjones <philip.graham.jones@googlemail.com>"]
+authors = [
+    {name = "pgjones", email = "philip.graham.jones@googlemail.com"},
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Web Environment",
@@ -20,9 +22,14 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 include = ["src/quart_cors/py.typed"]
-license = "MIT"
+license = {text = "MIT"}
 readme = "README.rst"
 repository = "https://github.com/pgjones/quart-cors/"
+dependencies = [
+    "quart >= 0.15",
+    "typing_extensions; python_version < '3.11'",
+]
+requires-python = ">=3.9"
 
 [tool.black]
 line-length = 100
@@ -56,14 +63,6 @@ warn_return_any = false
 warn_unused_configs = true
 warn_unused_ignores = true
 
-[tool.poetry.dependencies]
-python = ">=3.9"
-quart = ">=0.15"
-typing_extensions = { version = "*", python = "<3.10" }
-
-[tool.poetry.dev-dependencies]
-tox = "*"
-
 [tool.pytest.ini_options]
 addopts = "--no-cov-on-fail --showlocals --strict-markers"
 asyncio_default_fixture_loop_scope = "function"
@@ -71,5 +70,5 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 
 [build-system]
-requires = ["poetry_core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
