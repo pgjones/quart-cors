@@ -1,6 +1,6 @@
 import re
 from datetime import timedelta
-from typing import Pattern, Union
+from re import Pattern
 
 import pytest
 from quart import Blueprint, Quart
@@ -92,7 +92,7 @@ async def test_blueprint_cors() -> None:
         (re.compile(r"https:\/\/.*\.?quart\.com"), "https://quart.com"),
     ],
 )
-async def test_regex_matching(allowed_origin: Union[Pattern, str], expected: str) -> None:
+async def test_regex_matching(allowed_origin: Pattern | str, expected: str) -> None:
     app = Quart(__name__)
     app.config["QUART_CORS_ALLOW_ORIGIN"] = [allowed_origin]
 

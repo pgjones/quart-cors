@@ -1,5 +1,3 @@
-from typing import List
-
 import pytest
 from quart import Quart
 from werkzeug.datastructures import HeaderSet
@@ -65,7 +63,7 @@ async def test_request_method_match(app: Quart) -> None:
     ],
 )
 async def test_request_headers(
-    app: Quart, config_headers: List[str], request_headers: str, expected: List[str]
+    app: Quart, config_headers: list[str], request_headers: str, expected: list[str]
 ) -> None:
     test_client = app.test_client()
     app.config["QUART_CORS_ALLOW_HEADERS"] = config_headers

@@ -1,6 +1,8 @@
+from collections.abc import Awaitable, Callable, Iterable
 from datetime import timedelta
 from functools import partial, wraps
-from typing import Any, Awaitable, Callable, cast, Iterable, Optional, Pattern, Set, TypeVar, Union
+from re import Pattern
+from typing import Any, cast, ParamSpec, TypeVar
 
 from quart import (
     abort,
@@ -16,14 +18,9 @@ from quart import (
 from quart.typing import RouteCallable, WebsocketCallable
 from werkzeug.datastructures import HeaderSet
 
-try:
-    from typing import ParamSpec
-except ImportError:
-    from typing_extensions import ParamSpec
-
 __all__ = ("cors", "route_cors", "websocket_cors", "cors_exempt")
 
-OriginType = Union[Pattern, str]
+OriginType = Pattern | str
 
 DEFAULTS = {
     "QUART_CORS_ALLOW_CREDENTIALS": False,
@@ -42,16 +39,16 @@ P = ParamSpec("P")
 
 def route_cors(
     *,
-    allow_credentials: Optional[bool] = None,
-    allow_headers: Optional[Iterable[str]] = None,
-    allow_methods: Optional[Iterable[str]] = None,
-    allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None,
-    expose_headers: Optional[Iterable[str]] = None,
-    max_age: Optional[Union[timedelta, float, str]] = None,
-    send_origin_wildcard: Optional[bool] = None,
+    allow_credentials: bool | None = None,
+    allow_headers: Iterable[str] | None = None,
+    allow_methods: Iterable[str] | None = None,
+    allow_origin: OriginType | Iterable[OriginType] | None = None,
+    expose_headers: Iterable[str] | None = None,
+    max_age: timedelta | float | str | None = None,
+    send_origin_wildcard: bool | None = None,
     provide_automatic_options: bool = True,
 ) -> Callable[
-    [Union[Callable[P, ResponseReturnValue], Callable[P, Awaitable[ResponseReturnValue]]]],
+    [Callable[P, ResponseReturnValue] | Callable[P, Awaitable[ResponseReturnValue]]],
     Callable[P, Awaitable[Response]],
 ]:
     """A decorator to add the CORS access control headers.
@@ -95,7 +92,7 @@ def route_cors(
     """
 
     def decorator(
-        func: Union[Callable[P, ResponseReturnValue], Callable[P, Awaitable[ResponseReturnValue]]]
+        func: Callable[P, ResponseReturnValue] | Callable[P, Awaitable[ResponseReturnValue]],
     ) -> Callable[P, Awaitable[Response]]:
         if provide_automatic_options:
             func.required_methods = getattr(func, "required_methods", set())  # type: ignore
@@ -149,14 +146,14 @@ def route_cors(
     return decorator
 
 
-V = TypeVar("V", bound=Optional[ResponseReturnValue])
+V = TypeVar("V", bound=ResponseReturnValue | None)
 
 
 def websocket_cors(
     *,
-    allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None,
-    send_origin_wildcard: Optional[bool] = None,
-) -> Callable[[Callable[P, Union[V, Awaitable[V]]]], Callable[P, Awaitable[V]]]:
+    allow_origin: OriginType | Iterable[OriginType] | None = None,
+    send_origin_wildcard: bool | None = None,
+) -> Callable[[Callable[P, V | Awaitable[V]]], Callable[P, Awaitable[V]]]:
     """A decorator to control CORS websocket requests.
 
     This should be used to wrap a websocket handler (or view function)
@@ -182,11 +179,9 @@ def websocket_cors(
 
     """
 
-    def decorator(func: Callable[P, Union[V, Awaitable[V]]]) -> Callable[P, Awaitable[V]]:
+    def decorator(func: Callable[P, V | Awaitable[V]]) -> Callable[P, Awaitable[V]]:
         @wraps(func)
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> V:
-            nonlocal allow_origin, send_origin_wildcard
-
             # Will abort if origin is invalid
             _apply_websocket_cors(
                 allow_origin=allow_origin, send_origin_wildcard=send_origin_wildcard
@@ -199,7 +194,7 @@ def websocket_cors(
     return decorator
 
 
-U = TypeVar("U", bound=Union[RouteCallable, WebsocketCallable])
+U = TypeVar("U", bound=RouteCallable | WebsocketCallable)
 
 
 def cors_exempt(func: U) -> U:
@@ -221,19 +216,19 @@ def cors_exempt(func: U) -> U:
     return func
 
 
-T = TypeVar("T", bound=Union[Blueprint, Quart])
+T = TypeVar("T", bound=Blueprint | Quart)
 
 
 def cors(
     app_or_blueprint: T,
     *,
-    allow_credentials: Optional[bool] = None,
-    allow_headers: Optional[Iterable[str]] = None,
-    allow_methods: Optional[Iterable[str]] = None,
-    allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None,
-    expose_headers: Optional[Iterable[str]] = None,
-    max_age: Optional[Union[timedelta, float, str]] = None,
-    send_origin_wildcard: Optional[bool] = None,
+    allow_credentials: bool | None = None,
+    allow_headers: Iterable[str] | None = None,
+    allow_methods: Iterable[str] | None = None,
+    allow_origin: OriginType | Iterable[OriginType] | None = None,
+    expose_headers: Iterable[str] | None = None,
+    max_age: timedelta | float | str | None = None,
+    send_origin_wildcard: bool | None = None,
 ) -> T:
     """Apply the CORS access control headers to all routes.
 
@@ -289,8 +284,8 @@ def cors(
 
 async def _before_websocket(
     *,
-    allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None,
-    send_origin_wildcard: Optional[bool] = None,
+    allow_origin: OriginType | Iterable[OriginType] | None = None,
+    send_origin_wildcard: bool | None = None,
 ) -> None:
     view_func = current_app.view_functions.get(websocket.endpoint)
     if not getattr(view_func, QUART_CORS_EXEMPT_ATTRIBUTE, False):
@@ -300,16 +295,16 @@ async def _before_websocket(
 
 
 async def _after_request(
-    response: Optional[Response],
+    response: Response | None,
     *,
-    allow_credentials: Optional[bool] = None,
-    allow_headers: Optional[Iterable[str]] = None,
-    allow_methods: Optional[Iterable[str]] = None,
-    allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None,
-    expose_headers: Optional[Iterable[str]] = None,
-    max_age: Optional[Union[timedelta, float, str]] = None,
-    send_origin_wildcard: Optional[bool] = None,
-) -> Optional[Response]:
+    allow_credentials: bool | None = None,
+    allow_headers: Iterable[str] | None = None,
+    allow_methods: Iterable[str] | None = None,
+    allow_origin: OriginType | Iterable[OriginType] | None = None,
+    expose_headers: Iterable[str] | None = None,
+    max_age: timedelta | float | str | None = None,
+    send_origin_wildcard: bool | None = None,
+) -> Response | None:
     allow_credentials = allow_credentials or _get_config_or_default("QUART_CORS_ALLOW_CREDENTIALS")
     allow_headers = _sanitise_header_set(allow_headers, "QUART_CORS_ALLOW_HEADERS")
     allow_methods = _sanitise_header_set(allow_methods, "QUART_CORS_ALLOW_METHODS")
@@ -343,18 +338,18 @@ async def _after_request(
 
 
 def _apply_cors(
-    request_origin: Optional[str],
-    request_headers: Optional[HeaderSet],
-    request_method: Optional[str],
+    request_origin: str | None,
+    request_headers: HeaderSet | None,
+    request_method: str | None,
     method: str,
     response: Response,
     *,
     allow_credentials: bool,
     allow_headers: HeaderSet,
     allow_methods: HeaderSet,
-    allow_origin: Set[OriginType],
+    allow_origin: set[OriginType],
     expose_headers: HeaderSet,
-    max_age: Optional[int],
+    max_age: int | None,
     send_origin_wildcard: bool,
 ) -> Response:
     # Logic follows https://www.w3.org/TR/cors/
@@ -393,8 +388,8 @@ def _apply_cors(
 
 def _apply_websocket_cors(
     *,
-    allow_origin: Optional[Union[OriginType, Iterable[OriginType]]] = None,
-    send_origin_wildcard: Optional[bool] = None,
+    allow_origin: OriginType | Iterable[OriginType] | None = None,
+    send_origin_wildcard: bool | None = None,
 ) -> None:
     allow_origin = _sanitise_origin_set(allow_origin, "QUART_CORS_ALLOW_ORIGIN")
     send_origin_wildcard = send_origin_wildcard or _get_config_or_default(
@@ -406,8 +401,8 @@ def _apply_websocket_cors(
 
 
 def _sanitise_origin_set(
-    value: Optional[Union[OriginType, Iterable[OriginType]]], config_key: str
-) -> Set[OriginType]:
+    value: OriginType | Iterable[OriginType] | None, config_key: str
+) -> set[OriginType]:
     if value is None:
         value = _get_config_or_default(config_key)
     elif isinstance(value, (Pattern, str)):
@@ -415,7 +410,7 @@ def _sanitise_origin_set(
     return set(value)  # type: ignore
 
 
-def _sanitise_header_set(value: Optional[Union[str, Iterable[str]]], config_key: str) -> HeaderSet:
+def _sanitise_header_set(value: str | Iterable[str] | None, config_key: str) -> HeaderSet:
     if value is None:
         value = _get_config_or_default(config_key)
     elif isinstance(value, str):
@@ -423,7 +418,7 @@ def _sanitise_header_set(value: Optional[Union[str, Iterable[str]]], config_key:
     return HeaderSet(value)
 
 
-def _sanitise_max_age(value: Optional[Union[timedelta, float, str]], config_key: str) -> int:
+def _sanitise_max_age(value: timedelta | float | str | None, config_key: str) -> int:
     if value is None:
         value = _get_config_or_default(config_key)
     elif isinstance(value, timedelta):
@@ -438,8 +433,8 @@ def _get_config_or_default(config_key: str) -> Any:
 
 
 def _get_origin_if_valid(
-    origin: Optional[str], allow_origin: Set[OriginType], send_wildcard: bool
-) -> Optional[str]:
+    origin: str | None, allow_origin: set[OriginType], send_wildcard: bool
+) -> str | None:
     if origin is None or origin == "":
         return None
 

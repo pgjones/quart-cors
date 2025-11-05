@@ -13,11 +13,11 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
@@ -29,11 +29,11 @@ dependencies = [
     "quart >= 0.15",
     "typing_extensions; python_version < '3.11'",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 
 [tool.black]
 line-length = 100
-target-version = ["py39"]
+target-version = ["py310"]
 
 [tool.isort]
 combine_as_imports = true
