@@ -6,10 +6,15 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   tox:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
 
     container: python:${{ matrix.python }}
 
@@ -28,7 +33,7 @@ jobs:
           - {name: 'package', python: '3.14', tox: package}
 
     steps:
-      - uses: pgjones/actions/tox@v1
+      - uses: pgjones/actions/tox@dbbee601c084d000c4fc711d4b27cb306e15ead1 # v1
         with:
           environment: ${{ matrix.tox }}
 
@@ -37,4 +42,4 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: pgjones/actions/zizmor@v1
+      - uses: pgjones/actions/zizmor@dbbee601c084d000c4fc711d4b27cb306e15ead1 # v1
